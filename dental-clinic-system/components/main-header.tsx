@@ -17,11 +17,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { AppSidebar } from "@/components/app-sidebar"
 
 export function MainHeader() {
   const { user, logout } = useAuth()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -35,11 +37,19 @@ export function MainHeader() {
   }
 
   return (
-    <header className="bg-[#5b4b8a] px-6 py-4 flex items-center justify-between gap-4">
-      {/* Menu button */}
-      <Button variant="ghost" size="icon" className="bg-[#c9b888] hover:bg-[#b8a777] rounded-full w-12 h-12">
-        <Menu className="w-6 h-6 text-[#5b4b8a]" />
-      </Button>
+    <>
+      <AppSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      
+      <header className="bg-[#5b4b8a] px-6 py-4 flex items-center justify-between gap-4">
+        {/* Menu button */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="bg-[#c9b888] hover:bg-[#b8a777] rounded-full w-12 h-12"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <Menu className="w-6 h-6 text-[#5b4b8a]" />
+        </Button>
 
       {/* Search bar */}
       <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
@@ -86,5 +96,6 @@ export function MainHeader() {
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
+    </>
   )
 }
