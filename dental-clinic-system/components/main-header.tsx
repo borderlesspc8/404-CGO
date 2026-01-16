@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { Menu, Search, User } from "lucide-react"
+import { Menu, Search, User, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -18,12 +18,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AppSidebar } from "@/components/app-sidebar"
+import { useShoppingCart } from "@/components/shopping-cart-context"
 
 export function MainHeader() {
   const { user, logout } = useAuth()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { getItemCount } = useShoppingCart()
+  const cartCount = getItemCount()
 
   const handleLogout = () => {
     logout()
@@ -71,30 +74,47 @@ export function MainHeader() {
       </form>
 
       {/* User profile */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="flex items-center gap-3 hover:bg-[#5b4b8a]/80">
-            <span className="text-white font-medium">{user?.name || "Usuário"}</span>
-            <Avatar className="w-10 h-10 border-2 border-white">
-              <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
-              <AvatarFallback className="bg-[#c9b888] text-[#5b4b8a] font-bold">
-                {user?.name?.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <User className="mr-2 h-4 w-4" />
-            Perfil
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-            Sair
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex items-center gap-4">
+        {/* Cart button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative hover:bg-[#5b4b8a]/80"
+          onClick={() => router.push("/carrinho")}
+        >
+          <ShoppingCart className="w-6 h-6 text-white" />
+          {cartCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+              {cartCount}
+            </span>
+          )}
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="flex items-center gap-3 hover:bg-[#5b4b8a]/80">
+              <span className="text-white font-medium">{user?.name || "Usuário"}</span>
+              <Avatar className="w-10 h-10 border-2 border-white">
+                <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
+                <AvatarFallback className="bg-[#c9b888] text-[#5b4b8a] font-bold">
+                  {user?.name?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <User className="mr-2 h-4 w-4" />
+              Perfil
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+              Sair
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </header>
     </>
   )

@@ -106,7 +106,7 @@ export default function DashboardPage() {
             <ModuleCard
               title="Dental"
               description="E-commerce com os melhores valores para otimizar seus lucros"
-              href="/dental"
+              href="/ecommerce"
               color="#5b4b8a"
             />
           </div>

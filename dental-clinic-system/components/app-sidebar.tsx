@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Calendar, Users, DollarSign, BarChart3, MessageSquare, Package, FlaskConical, Settings } from "lucide-react"
+import { Home, Calendar, Users, DollarSign, BarChart3, MessageSquare, Package, FlaskConical, Settings, ShoppingCart } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -15,9 +15,10 @@ const menuItems = [
   { icon: Calendar, label: "Agenda", href: "/agenda" },
   { icon: Users, label: "Pacientes", href: "/pacientes" },
   { icon: DollarSign, label: "Financeiro", href: "/financeiro" },
-  { icon: BarChart3, label: "Relatórios", href: "/dashboard/analytics" },
-  { icon: MessageSquare, label: "CRM", href: "/crm" },
+  { icon: BarChart3, label: "Relatórios", href: "/relatorios" },
   { icon: Package, label: "Estoque", href: "/estoque" },
+  { icon: MessageSquare, label: "Propagandas", href: "/propagandas" },
+  { icon: ShoppingCart, label: "E-commerce", href: "/ecommerce" },
   { icon: FlaskConical, label: "Laboratório", href: "/laboratorio" },
   { icon: Settings, label: "Configurações", href: "/configuracoes" },
 ]

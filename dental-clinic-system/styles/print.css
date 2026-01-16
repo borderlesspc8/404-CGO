@@ -1,0 +1,121 @@
+@media print {
+  /* Ocultar elementos não imprimíveis */
+  .no-print,
+  button,
+  [role="button"],
+  .main-header,
+  .main-footer,
+  nav {
+    display: none !important;
+  }
+
+  /* Configurações gerais */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: white;
+    margin: 0;
+    padding: 0;
+  }
+
+  main {
+    padding: 20px;
+    margin: 0;
+  }
+
+  /* Tabelas */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    page-break-inside: avoid;
+  }
+
+  thead {
+    background-color: #f3f4f6 !important;
+    color: black;
+  }
+
+  th {
+    padding: 12px;
+    text-align: left;
+    font-weight: bold;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  /* Cores de status */
+  .bg-blue-100 {
+    background-color: #dbeafe !important;
+    color: #1e40af !important;
+  }
+
+  .bg-yellow-100 {
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+  }
+
+  .bg-green-100 {
+    background-color: #dcfce7 !important;
+    color: #166534 !important;
+  }
+
+  .bg-red-100 {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+  }
+
+  /* Cards */
+  .card {
+    page-break-inside: avoid;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 20px;
+  }
+
+  /* Headers */
+  h1,
+  h2,
+  h3 {
+    page-break-after: avoid;
+    margin-top: 0;
+  }
+
+  /* Títulos e Subtítulos */
+  h1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  h2 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  /* Badges */
+  .badge {
+    border: 1px solid #d1d5db;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* Quebras de página */
+  @page {
+    size: A4;
+    margin: 2cm;
+  }
+}
