@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 interface AppSidebarProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen?: boolean
+  onClose?: () => void
 }
 
 const menuItems = [
@@ -23,7 +23,7 @@ const menuItems = [
   { icon: Settings, label: "Configurações", href: "/configuracoes" },
 ]
 
-export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
+export function AppSidebar({ isOpen = false, onClose = () => {} }: AppSidebarProps) {
   const pathname = usePathname()
 
   return (
