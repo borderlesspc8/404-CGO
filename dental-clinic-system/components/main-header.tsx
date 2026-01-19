@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { Menu, Search, User, ShoppingCart } from "lucide-react"
+import { LogOut, Menu, Search, User, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -31,6 +31,10 @@ export function MainHeader() {
   const handleLogout = () => {
     logout()
     router.push("/")
+  }
+
+  const handleProfile = () => {
+    router.push("/perfil")
   }
 
   const handleSearch = (e: React.FormEvent) => {
@@ -102,14 +106,26 @@ export function MainHeader() {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
+          <DropdownMenuContent
+            align="end"
+            className="w-60 rounded-2xl border border-[#e5e2f5] bg-white shadow-lg shadow-[#2c1f5b]/20"
+          >
+            <DropdownMenuLabel className="text-[#2c1f5b] font-semibold px-4 py-3">
+              Minha Conta
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-[#e5e2f5]" />
+            <DropdownMenuItem
+              onClick={handleProfile}
+              className="mx-2 my-2 flex items-center gap-2 rounded-lg bg-[#c9b888] text-[#2c1f5b] font-medium hover:bg-[#b8a777]"
+            >
+              <User className="h-4 w-4" />
               Perfil
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="mx-2 mb-2 flex items-center gap-2 rounded-lg text-red-600 hover:bg-red-50"
+            >
+              <LogOut className="h-4 w-4" />
               Sair
             </DropdownMenuItem>
           </DropdownMenuContent>

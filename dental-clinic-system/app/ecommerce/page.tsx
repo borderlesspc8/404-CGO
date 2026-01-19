@@ -9,21 +9,28 @@ import { ProductGrid } from "@/components/product-grid"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useShoppingCart } from "@/components/shopping-cart-context"
-import { ShoppingCart, TrendingUp } from "lucide-react"
+import { useFavorites } from "@/components/favorites-context"
+import { ShoppingCart, TrendingUp, Heart, TrendingDown } from "lucide-react"
 
 export default function EcommercePage() {
   const router = useRouter()
   const { user } = useAuth()
   const { getItemCount } = useShoppingCart()
+  const { getFavoriteCount, getDiscountNotifications } = useFavorites()
   const [itemCount, setItemCount] = useState(0)
+  const [favoriteCount, setFavoriteCount] = useState(0)
+  const [discountNotifications, setDiscountNotifications] = useState<any[]>([])
 
   useEffect(() => {
     if (!user) {
       router.push("/")
     }
     setItemCount(getItemCount())
-  }, [user, router, getItemCount])
+    setFavoriteCount(getFavoriteCount())
+    setDiscountNotifications(getDiscountNotifications())
+  }, [user, router, getItemCount, getFavoriteCount, getDiscountNotifications])
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -38,14 +45,44 @@ export default function EcommercePage() {
               Acesse nosso catálogo de materiais dentários de qualidade
             </p>
           </div>
-          <Button
-            onClick={() => router.push("/carrinho")}
-            className="gap-2 relative"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            Carrinho ({itemCount})
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => router.push("/favoritos")}
+              variant="outline"
+              className="gap-2 relative"
+            >
+              <Heart className="h-5 w-5" />
+              Favoritos ({favoriteCount})
+            </Button>
+            <Button
+              onClick={() => router.push("/carrinho")}
+              className="gap-2 relative"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              Carrinho ({itemCount})
+            </Button>
+          </div>
         </div>
+
+        {/* Notificações de Desconto */}
+        {discountNotifications.length > 0 && (
+          <Alert className="mb-6 border-green-500 bg-green-50 dark:bg-green-950">
+            <TrendingDown className="h-5 w-5 text-green-600" />
+            <AlertDescription className="ml-2">
+              <strong className="text-green-700 dark:text-green-400">
+                🎉 Produtos favoritos com desconto!
+              </strong>{" "}
+              Você tem {discountNotifications.length} produto(s) favorito(s) com desconto.{" "}
+              <Button
+                variant="link"
+                className="p-0 h-auto text-green-700 dark:text-green-400"
+                onClick={() => router.push("/favoritos")}
+              >
+                Ver Favoritos
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Cards de Info */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { useShoppingCart } from "@/components/shopping-cart-context"
+import { useFavorites } from "@/components/favorites-context"
 import { Product, ecommerceProducts, propagandaProductMap } from "@/lib/ecommerce-data"
 import { ShoppingCart, Heart, Minus, Plus } from "lucide-react"
 
@@ -21,6 +22,7 @@ export function ProductGrid({
   serviceType,
 }: ProductGridProps) {
   const { addItem } = useShoppingCart()
+  const { isFavorite, addFavorite, removeFavorite } = useFavorites()
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCategory, setFilterCategory] = useState("")
@@ -194,8 +196,22 @@ export function ProductGrid({
                   <ShoppingCart className="h-4 w-4" />
                   Carrinho
                 </Button>
-                <Button size="sm" variant="outline">
-                  <Heart className="h-4 w-4" />
+                <Button
+                  size="sm"
+                  variant={isFavorite(product.id) ? "default" : "outline"}
+                  onClick={() => {
+                    if (isFavorite(product.id)) {
+                      removeFavorite(product.id)
+                    } else {
+                      addFavorite(product.id, product.price)
+                    }
+                  }}
+                >
+                  <Heart
+                    className={`h-4 w-4 ${
+                      isFavorite(product.id) ? "fill-current" : ""
+                    }`}
+                  />
                 </Button>
               </div>
             </CardContent>
