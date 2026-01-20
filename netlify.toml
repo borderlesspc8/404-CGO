@@ -1,7 +1,7 @@
 [build]
   base = "dental-clinic-system"
   command = "pnpm install && pnpm build"
-  publish = "dental-clinic-system/.next"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
