@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useShoppingCart } from "@/components/shopping-cart-context"
+import { useOrders } from "@/components/orders-context"
+import { PaymentOptions } from "@/components/payment-options"
 import { ecommerceProducts } from "@/lib/ecommerce-data"
 import {
   Trash2,
@@ -43,8 +45,10 @@ export default function CarrinhoPage() {
   const router = useRouter()
   const { user } = useAuth()
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useShoppingCart()
+  const { addOrder } = useOrders()
   const [mounted, setMounted] = useState(false)
   const [selectedShipping, setSelectedShipping] = useState("local")
+  const [selectedPayment, setSelectedPayment] = useState("credit_card")
   const [address, setAddress] = useState({
     street: "",
     number: "",
@@ -74,8 +78,26 @@ export default function CarrinhoPage() {
   }
 
   const handleCheckout = () => {
-    alert("Funcionalidade de checkout será integrada com seu backend")
+    const orderItems = items.map((item) => ({
+      productId: item.productId,
+      name: getProductName(item.productId),
+      price: item.price,
+      quantity: item.quantity,
+    }))
+
+    const orderId = addOrder({
+      items: orderItems,
+      subtotal: total,
+      tax: taxEstimate,
+      shipping: finalShippingCost,
+      total: finalTotal,
+      status: "processing",
+      paymentMethod: selectedPayment,
+      address,
+    })
+
     clearCart()
+    router.push(`/pedido-sucesso?orderId=${orderId}`)
   }
 
   if (!mounted) return null
@@ -303,6 +325,12 @@ export default function CarrinhoPage() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Formas de Pagamento */}
+              <PaymentOptions
+                onPaymentSelect={setSelectedPayment}
+                selectedMethod={selectedPayment}
+              />
 
               {/* Produtos */}
               {items.map((item) => {

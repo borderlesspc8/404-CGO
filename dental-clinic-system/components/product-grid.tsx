@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { useShoppingCart } from "@/components/shopping-cart-context"
 import { useFavorites } from "@/components/favorites-context"
+import { useReviews } from "@/components/reviews-context"
 import { Product, ecommerceProducts, propagandaProductMap } from "@/lib/ecommerce-data"
-import { ShoppingCart, Heart, Minus, Plus } from "lucide-react"
+import { ShoppingCart, Heart, Minus, Plus, Star } from "lucide-react"
 
 interface ProductGridProps {
   products?: Product[]
@@ -23,6 +24,7 @@ export function ProductGrid({
 }: ProductGridProps) {
   const { addItem } = useShoppingCart()
   const { isFavorite, addFavorite, removeFavorite } = useFavorites()
+  const { getAverageRating, getTotalReviews } = useReviews()
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCategory, setFilterCategory] = useState("")
@@ -114,6 +116,26 @@ export function ProductGrid({
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
+              {/* Avaliações */}
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-3.5 w-3.5 ${
+                        star <= Math.floor(getAverageRating(product.id))
+                          ? "fill-yellow-500 text-yellow-500"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {getAverageRating(product.id)}{" "}
+                  <span className="text-xs">({getTotalReviews(product.id)})</span>
+                </span>
+              </div>
+
               {/* Descrição */}
               <p className="text-sm text-muted-foreground line-clamp-2">
                 {product.description}

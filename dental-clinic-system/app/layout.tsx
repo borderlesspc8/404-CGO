@@ -7,6 +7,8 @@ import "@/styles/print.css"
 import { AuthProvider } from "@/lib/auth-context"
 import { CartProvider } from "@/components/shopping-cart-context"
 import { FavoritesProvider } from "@/components/favorites-context"
+import { OrdersProvider } from "@/components/orders-context"
+import { ReviewsProvider } from "@/components/reviews-context"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -44,7 +46,11 @@ export default function RootLayout({
       <body className={`font-sans antialiased`}>
         <AuthProvider>
           <CartProvider>
-            <FavoritesProvider>{children}</FavoritesProvider>
+            <FavoritesProvider>
+              <OrdersProvider>
+                <ReviewsProvider>{children}</ReviewsProvider>
+              </OrdersProvider>
+            </FavoritesProvider>
           </CartProvider>
         </AuthProvider>
         <Analytics />

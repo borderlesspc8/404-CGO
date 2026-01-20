@@ -20,6 +20,7 @@ const menuItems = [
   { icon: MessageSquare, label: "Propagandas", href: "/propagandas" },
   { icon: ShoppingCart, label: "E-commerce", href: "/ecommerce" },
   { icon: Heart, label: "Favoritos", href: "/favoritos" },
+  { icon: Package, label: "Meus Pedidos", href: "/pedidos" },
   { icon: FlaskConical, label: "Laboratório", href: "/laboratorio" },
   { icon: Settings, label: "Configurações", href: "/configuracoes" },
 ]
