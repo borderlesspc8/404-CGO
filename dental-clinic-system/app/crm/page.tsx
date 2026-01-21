@@ -3,15 +3,24 @@
 import React, { useState } from "react"
 import { MainHeader } from "@/components/main-header"
 import { AppSidebar } from "@/components/app-sidebar"
+import { AutomationManager, FollowUpScheduler } from "@/components/crm-automation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import {
   Table,
@@ -24,7 +33,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Edit2, Trash2, Phone, Mail, MapPin } from "lucide-react"
+import { Plus, Edit2, Trash2, Phone, Mail, MapPin, TrendingUp, Users, Target } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
 
 interface Lead {
   id: string
@@ -91,11 +101,21 @@ const mockCampaigns: Campaign[] = [
 export default function CRMPage() {
   const [leads, setLeads] = useState<Lead[]>(mockLeads)
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns)
+  const [scheduledFollowUps, setScheduledFollowUps] = useState<any[]>([])
   const [newLead, setNewLead] = useState({
     name: "",
     email: "",
     phone: "",
     source: "",
+  })
+  const [editingLead, setEditingLead] = useState<Lead | null>(null)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    source: "",
+    status: "novo" as Lead["status"],
   })
 
   const getStatusColor = (status: string) => {
@@ -122,12 +142,52 @@ export default function CRMPage() {
       }
       setLeads([...leads, lead])
       setNewLead({ name: "", email: "", phone: "", source: "" })
+      toast({
+        title: "Lead adicionado",
+        description: `${lead.name} foi adicionado com sucesso`,
+      })
     }
   }
 
   const handleDeleteLead = (id: string) => {
     setLeads(leads.filter((lead) => lead.id !== id))
+    toast({
+      title: "Lead removido",
+      description: "Lead removido com sucesso",
+    })
   }
+
+  const handleOpenEdit = (lead: Lead) => {
+    setEditingLead(lead)
+    setEditForm({
+      name: lead.name,
+      email: lead.email,
+      phone: lead.phone,
+      source: lead.source,
+      status: lead.status,
+    })
+    setIsEditOpen(true)
+  }
+
+  const handleUpdateLead = () => {
+    if (!editingLead) return
+    const updated: Lead = {
+      ...editingLead,
+      ...editForm,
+    }
+    setLeads(leads.map((l) => (l.id === editingLead.id ? updated : l)))
+    toast({ title: "Lead atualizado", description: `${updated.name} salvo com sucesso` })
+    setIsEditOpen(false)
+    setEditingLead(null)
+  }
+
+  const handleScheduleFollowUp = (data: any) => {
+    setScheduledFollowUps([...scheduledFollowUps, { ...data, id: Date.now().toString() }])
+  }
+
+  const conversionRate = leads.length > 0 
+    ? ((leads.filter(l => l.status === "convertido").length / leads.length) * 100).toFixed(1)
+    : 0
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -135,10 +195,53 @@ export default function CRMPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <MainHeader title="CRM - Gestão de Relacionamento" />
         <main className="flex-1 overflow-auto p-8">
+          {/* KPIs */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Total de Leads</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{leads.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  {leads.filter(l => l.status === "novo").length} novos
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{conversionRate}%</div>
+                <p className="text-xs text-muted-foreground">
+                  {leads.filter(l => l.status === "convertido").length} convertidos
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Follow-ups Agendados</CardTitle>
+                <Target className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{scheduledFollowUps.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  Próximos 7 dias
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
           <Tabs defaultValue="leads" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-3">
+            <TabsList className="grid w-full max-w-md grid-cols-4">
               <TabsTrigger value="leads">Leads</TabsTrigger>
               <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
+              <TabsTrigger value="automacao">Automação</TabsTrigger>
               <TabsTrigger value="relatorio">Relatório</TabsTrigger>
             </TabsList>
 
@@ -248,10 +351,18 @@ export default function CRMPage() {
                         <TableCell>{lead.createdAt}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
+                            <FollowUpScheduler
+                              leadId={lead.id}
+                              leadName={lead.name}
+                              leadEmail={lead.email}
+                              leadPhone={lead.phone}
+                              onScheduleFollowUp={handleScheduleFollowUp}
+                            />
                             <Button
                               variant="ghost"
                               size="sm"
                               className="text-blue-600 hover:text-blue-800"
+                              onClick={() => handleOpenEdit(lead)}
                             >
                               <Edit2 className="w-4 h-4" />
                             </Button>
@@ -269,6 +380,78 @@ export default function CRMPage() {
                     ))}
                   </TableBody>
                 </Table>
+
+                {/* Dialog de edição de lead */}
+                <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                  <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>Editar Lead</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="grid gap-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Nome</Label>
+                          <Input
+                            value={editForm.name}
+                            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Email</Label>
+                          <Input
+                            type="email"
+                            value={editForm.email}
+                            onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Telefone</Label>
+                          <Input
+                            value={editForm.phone}
+                            onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Origem</Label>
+                          <Input
+                            value={editForm.source}
+                            onChange={(e) => setEditForm({ ...editForm, source: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Status</Label>
+                        <Select
+                          value={editForm.status}
+                          onValueChange={(value) => setEditForm({ ...editForm, status: value as Lead["status"] })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="novo">Novo</SelectItem>
+                            <SelectItem value="em-contato">Em contato</SelectItem>
+                            <SelectItem value="qualificado">Qualificado</SelectItem>
+                            <SelectItem value="proposta">Proposta</SelectItem>
+                            <SelectItem value="convertido">Convertido</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+                          Cancelar
+                        </Button>
+                        <Button onClick={handleUpdateLead}>Salvar</Button>
+                      </DialogFooter>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </TabsContent>
 
@@ -321,6 +504,11 @@ export default function CRMPage() {
                   </Card>
                 ))}
               </div>
+            </TabsContent>
+
+            {/* Automação Tab */}
+            <TabsContent value="automacao" className="space-y-6">
+              <AutomationManager />
             </TabsContent>
 
             {/* Relatório Tab */}

@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, TrendingUp, DollarSign, Target, CheckCircle } from "lucide-react"
+import { Plus, TrendingUp, DollarSign, Target, CheckCircle, LayoutGrid, LayoutList } from "lucide-react"
 import {
   ReportsFilter,
   FilterState,
@@ -25,7 +25,10 @@ import { ReportsActions } from "@/components/reports-actions"
 import { OpportunityDetails } from "@/components/opportunity-details"
 import { ReportCharts } from "@/components/report-charts"
 import { SalesAnalytics } from "@/components/sales-analytics"
+import { EditOpportunityDialog } from "@/components/edit-opportunity-dialog"
+import { SalesPipelineKanban } from "@/components/sales-pipeline-kanban"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -197,7 +200,10 @@ export default function RelatoriosPage() {
   })
   const [selectedOpportunity, setSelectedOpportunity] = useState<SalesOpportunity | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
+  const [editOpportunityOpen, setEditOpportunityOpen] = useState(false)
+  const [editingOpportunity, setEditingOpportunity] = useState<SalesOpportunity | null>(null)
   const [newOpportunityOpen, setNewOpportunityOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<"table" | "kanban">("table")
   const [formData, setFormData] = useState({
     patient: "",
     email: "",
@@ -276,8 +282,31 @@ export default function RelatoriosPage() {
   }
 
   const handleEditOpportunity = (id: string) => {
-    // Implementar edição
-    console.log("Editar oportunidade:", id)
+    const opportunity = opportunities.find((item) => item.id === id)
+    if (opportunity) {
+      setEditingOpportunity(opportunity)
+      setEditOpportunityOpen(true)
+    }
+  }
+
+  const handleSaveOpportunity = (updatedOpportunity: SalesOpportunity) => {
+    setOpportunities(
+      opportunities.map((opp) =>
+        opp.id === updatedOpportunity.id ? updatedOpportunity : opp
+      )
+    )
+  }
+
+  const handleMoveStage = (id: string, newStatus: string) => {
+    setOpportunities(
+      opportunities.map((opp) =>
+        opp.id === id ? { ...opp, status: newStatus as any } : opp
+      )
+    )
+    toast({
+      title: "Status atualizado",
+      description: `Oportunidade movida para ${newStatus}`,
+    })
   }
 
   const handleDeleteOpportunity = (id: string) => {
@@ -424,18 +453,42 @@ export default function RelatoriosPage() {
         {/* Gráficos */}
         <ReportCharts data={filteredData} />
 
-        {/* Ações */}
-        <ReportsActions data={opportunities} filteredData={filteredData} filters={filters} />
-
-        {/* Tabela para impressão */}
-        <div id="reports-table-print">
-          <ReportsTable
-            data={filteredData}
-            onView={handleViewOpportunity}
-            onEdit={handleEditOpportunity}
-            onDelete={handleDeleteOpportunity}
-          />
+        {/* Ações e Modo de Visualização */}
+        <div className="flex items-center justify-between mb-4">
+          <ReportsActions data={opportunities} filteredData={filteredData} filters={filters} />
+          
+          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="w-auto">
+            <TabsList>
+              <TabsTrigger value="table" className="gap-2">
+                <LayoutList className="h-4 w-4" />
+                Tabela
+              </TabsTrigger>
+              <TabsTrigger value="kanban" className="gap-2">
+                <LayoutGrid className="h-4 w-4" />
+                Pipeline
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
+
+        {/* Tabela ou Kanban */}
+        {viewMode === "table" ? (
+          <div id="reports-table-print">
+            <ReportsTable
+              data={filteredData}
+              onView={handleViewOpportunity}
+              onEdit={handleEditOpportunity}
+              onDelete={handleDeleteOpportunity}
+            />
+          </div>
+        ) : (
+          <SalesPipelineKanban
+            opportunities={filteredData}
+            onViewDetails={handleViewOpportunity}
+            onEdit={handleEditOpportunity}
+            onMoveStage={handleMoveStage}
+          />
+        )}
       </main>
 
       {/* Dialog de detalhes */}
@@ -443,6 +496,14 @@ export default function RelatoriosPage() {
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         opportunity={selectedOpportunity}
+      />
+
+      {/* Dialog de edição */}
+      <EditOpportunityDialog
+        open={editOpportunityOpen}
+        onOpenChange={setEditOpportunityOpen}
+        opportunity={editingOpportunity}
+        onSave={handleSaveOpportunity}
       />
 
       {/* Dialog de nova oportunidade */}
