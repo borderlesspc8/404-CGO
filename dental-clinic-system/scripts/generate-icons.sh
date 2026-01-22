@@ -1,0 +1,24 @@
+#!/bin/bash
+# Script para gerar ícones PWA
+
+# Criar diretório de ícones se não existir
+mkdir -p public/icons
+
+# Criar um ícone simples em SVG
+cat > public/icons/logo.svg << 'EOF'
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#grad1)"/>
+  <circle cx="256" cy="180" r="60" fill="white"/>
+  <path d="M 170 300 Q 170 250 256 250 Q 342 250 342 300 L 342 380 Q 342 420 306 430 L 206 430 Q 170 420 170 380 Z" fill="white"/>
+  <circle cx="150" cy="350" r="20" fill="white" opacity="0.6"/>
+  <circle cx="362" cy="350" r="20" fill="white" opacity="0.6"/>
+</svg>
+EOF
+
+echo "Ícones criados com sucesso em public/icons/"

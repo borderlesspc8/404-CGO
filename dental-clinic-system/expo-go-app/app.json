@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "ClinicaDental",
+    "slug": "clinica-dental-wrapper",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "clinicadental",
+    "assetBundlePatterns": ["**/*"],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "extra": {
+      "eas": {
+        "projectId": "local-dev"
+      }
+    }
+  }
+}

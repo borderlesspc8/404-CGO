@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { useOrders } from "@/components/orders-context"
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { CheckCircle, Download, Home, Package } from "lucide-react"
 
-export default function PedidoSucessoPage() {
+function PedidoSucessoContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
@@ -242,5 +242,13 @@ export default function PedidoSucessoPage() {
 
       <MainFooter />
     </div>
+  )
+}
+
+export default function PedidoSucessoPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Carregando...</div>}>
+      <PedidoSucessoContent />
+    </Suspense>
   )
 }

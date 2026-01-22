@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
@@ -17,9 +17,27 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [greeting, setGreeting] = useState("Boa Tarde!")
 
   const { login } = useAuth()
   const router = useRouter()
+
+  useEffect(() => {
+    // Get current time in Brasília timezone (UTC-3, or UTC-2 during DST)
+    const now = new Date()
+    const brasiliaTime = new Date(now.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }))
+    const hour = brasiliaTime.getHours()
+
+    if (hour >= 0 && hour < 6) {
+      setGreeting("Boa Madrugada!")
+    } else if (hour >= 6 && hour < 12) {
+      setGreeting("Bom dia!")
+    } else if (hour >= 12 && hour < 18) {
+      setGreeting("Boa tarde!")
+    } else {
+      setGreeting("Boa noite!")
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,7 +70,7 @@ export default function LoginPage() {
         <div className="w-full max-w-6xl grid md:grid-cols-2 gap-12 items-center">
           {/* Left side - Welcome message */}
           <div className="space-y-4">
-            <h2 className="text-5xl font-bold text-[#5b4b8a]">Boa Tarde!</h2>
+            <h2 className="text-5xl font-bold text-[#5b4b8a]">{greeting}</h2>
             <p className="text-[#c9b888] text-xl">Seja bem-vindo(a)</p>
           </div>
 
@@ -129,14 +147,12 @@ export default function LoginPage() {
           <div className="flex items-center gap-3">
             <MessageCircle className="w-8 h-8 text-[#5b4b8a]" />
             <div>
-              <p className="text-[#5b4b8a] font-bold text-lg">CGO</p>
-              <p className="text-[#5b4b8a] text-xs">CENTRO GERENCIAL ODONTOLÓGICO</p>
-              <p className="text-[#5b4b8a] text-xs font-semibold">SUPORTE PERSONALIZADO</p>
+              <p className="text-[#5b4b8a] font-bold text-lg">Oris Gestão Odontológica Inteligente</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-4xl font-bold text-white tracking-wider">LAPERLE</p>
-            <p className="text-[#5b4b8a] text-sm tracking-wide">ODONTOLOGIA</p>
+            <p className="text-4xl font-bold text-[#5b4b8a] tracking-wider">Oris</p>
+            <p className="text-white text-sm tracking-wide">odontologia</p>
           </div>
         </div>
       </footer>

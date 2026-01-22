@@ -107,6 +107,29 @@ export default function AgendaPage() {
   }
 
   const handleAddToWaitingList = (entry: any) => {
+    console.log("Novo na lista de espera:", entry)
+    // Aqui você integraria com seu backend
+  }
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <AppSidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <MainHeader />
+        <main className="flex-1 overflow-auto bg-gray-50">
+          <div className="flex flex-col h-full">
+            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="flex-1 flex flex-col">
+              <div className="bg-white border-b border-gray-200">
+                <div className="px-6 py-4">
+                  <h1 className="text-2xl font-bold text-[#5b4b8a]">Agenda</h1>
+                </div>
+                <TabsList className="mx-6 mb-4">
+                  <TabsTrigger value="calendar">Calendário</TabsTrigger>
+                  <TabsTrigger value="online">Agendamento Online</TabsTrigger>
+                  <TabsTrigger value="waiting">Lista de Espera</TabsTrigger>
+                </TabsList>
+              </div>
+
               <TabsContent value="calendar" className="mt-0 p-0">
                 {/* Calendar header */}
                 <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -263,19 +286,6 @@ export default function AgendaPage() {
                     </div>
                   </div>
                 </div>
-              </TabsContent>
-                    <p className="font-semibold text-sm" style={{ color: professional.color }}>
-                      {professional.name}
-                    </p>
-                    <div className="flex justify-center gap-2 mt-2">
-                      <div className="w-6 h-6 rounded-full bg-green-500" />
-                      <div className="w-6 h-6 rounded-full bg-green-500" />
-                      <div className="w-6 h-6 rounded-full bg-green-500" />
-                      <div className="w-6 h-6 rounded-full bg-green-500" />
-                    </div>
-                  </div>
-                ))}
-              </div>
 
               {/* Time slots and appointments */}
               <div className="relative">
@@ -331,8 +341,6 @@ export default function AgendaPage() {
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
               </TabsContent>
 
               {/* Agendamento Online Tab */}
@@ -354,7 +362,7 @@ export default function AgendaPage() {
               </TabsContent>
             </Tabs>
           </div>
-        </div>
+        </main>
       </div>
       <Dialog open={!!selectedAppointment} onOpenChange={(open) => !open && setSelectedAppointment(null)}>
         <DialogContent className="max-w-2xl">

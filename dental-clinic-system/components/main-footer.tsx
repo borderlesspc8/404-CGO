@@ -7,9 +7,8 @@ export function MainFooter() {
         <div className="flex items-center gap-3">
           <MessageCircle className="w-6 h-6 text-[#5b4b8a]" />
           <div>
-            <p className="text-[#5b4b8a] font-bold text-sm">CGO</p>
-            <p className="text-[#5b4b8a] text-xs">CENTRO GERENCIAL ODONTOLÓGICO</p>
-            <p className="text-[#5b4b8a] text-xs font-semibold">SUPORTE PERSONALIZADO</p>
+            <p className="text-[#5b4b8a] font-bold text-sm">Oris</p>
+            <p className="text-[#5b4b8a] text-xs">Gestão odontológica inteligente</p>
           </div>
         </div>
       </div>

@@ -230,7 +230,7 @@ export default function PatientDetailPage() {
                     <div className="bg-[#c9b888] rounded-lg p-6">
                       <div className="bg-green-700 text-white rounded p-4">
                         <p className="text-xs">CIRURGIA PROTOCOLO (1X)</p>
-                        <p className="text-xs">LAPERLE - PEDRO HENRIQUE RIBEIRO MOTA</p>
+                        <p className="text-xs">Oris - Pedro Henrique Ribeiro Mota</p>
                         <p className="text-2xl font-bold mt-2">R$3.015,00</p>
                       </div>
                     </div>
@@ -257,7 +257,7 @@ export default function PatientDetailPage() {
                   <div className="bg-[#c9b888] rounded-lg p-6">
                     <div className="bg-green-700 text-white rounded p-4">
                       <p className="text-xs">PRORTESE PROTOCOLO (1X)</p>
-                      <p className="text-xs">LAPERLE - PEDRO HENRIQUE RIBEIRO MOTA</p>
+                      <p className="text-xs">Oris - Pedro Henrique Ribeiro Mota</p>
                       <p className="text-2xl font-bold mt-2">R$12.100,00</p>
                     </div>
                   </div>

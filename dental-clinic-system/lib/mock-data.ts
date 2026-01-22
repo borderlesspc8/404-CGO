@@ -236,14 +236,14 @@ export const mockProcedures: Procedure[] = [
   {
     id: "1",
     name: "Cirurgia Protocolo",
-    type: "LAPERLE - PEDRO HENRIQUE RIBEIRO MOTA",
+    type: "Oris - Pedro Henrique Ribeiro Mota",
     value: 3015.0,
     professional: "Diovana",
   },
   {
     id: "2",
     name: "Prótese Protocolo",
-    type: "LAPERLE - PEDRO HENRIQUE RIBEIRO MOTA",
+    type: "Oris - Pedro Henrique Ribeiro Mota",
     value: 12100.0,
     professional: "Diovana",
   },

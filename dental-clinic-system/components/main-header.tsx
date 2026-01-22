@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { LogOut, Menu, Search, User, ShoppingCart } from "lucide-react"
@@ -47,35 +48,47 @@ export function MainHeader() {
     <>
       <AppSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <header className="bg-[#5b4b8a] px-6 py-4 flex items-center justify-between gap-4">
+      <header className="bg-[#5b4b8a] px-6 py-4 flex items-center gap-4">
         {/* Menu button */}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="bg-[#c9b888] hover:bg-[#b8a777] rounded-full w-12 h-12"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="bg-[#c9b888] hover:bg-[#b8a777] rounded-full w-12 h-12 shrink-0"
           onClick={() => setSidebarOpen(true)}
         >
           <Menu className="w-6 h-6 text-[#5b4b8a]" />
         </Button>
 
-      {/* Search bar */}
-      <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
-        <div className="relative">
-          <Input
-            type="text"
-            placeholder="Encontre pacientes ou funções do sistema"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white rounded-full pl-6 pr-12 py-6 text-[#5b4b8a] placeholder:text-[#5b4b8a]/50"
+        {/* Logo */}
+        <div className="flex items-center gap-2 min-w-[160px] bg-transparent">
+          <Image
+            src="/logo-oris.png"
+            alt="Oris - Gestão Odontológica"
+            width={160}
+            height={56}
+            className="h-14 w-auto object-contain drop-shadow-sm"
+            priority
           />
-          <button
-            type="submit"
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5b4b8a] hover:text-[#5b4b8a]/70"
-          >
-            <Search className="w-5 h-5" />
-          </button>
         </div>
-      </form>
+
+        {/* Search bar */}
+        <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Encontre pacientes ou funções do sistema"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white rounded-full pl-6 pr-12 py-6 text-[#5b4b8a] placeholder:text-[#5b4b8a]/50"
+            />
+            <button
+              type="submit"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5b4b8a] hover:text-[#5b4b8a]/70"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+          </div>
+        </form>
 
       {/* User profile */}
       <div className="flex items-center gap-4">
