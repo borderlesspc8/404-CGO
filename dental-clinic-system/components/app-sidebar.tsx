@@ -41,14 +41,14 @@ export function AppSidebar({ isOpen = false, onClose = () => {} }: AppSidebarPro
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 h-full bg-white shadow-xl z-50 transition-transform duration-300 ease-in-out w-64",
+          "fixed top-0 left-0 h-full bg-white shadow-xl z-50 transition-transform duration-300 ease-in-out w-52",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="bg-[#5b4b8a] px-6 py-6">
-            <h2 className="text-[#c9b888] text-2xl font-bold">Menu</h2>
+          <div className="bg-[#5b4b8a] px-4 py-4">
+            <h2 className="text-[#c9b888] text-xl font-bold">Menu</h2>
           </div>
 
           {/* Navigation */}
