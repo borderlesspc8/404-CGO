@@ -9,6 +9,7 @@ import { CalendarSidebar } from "@/components/calendar-sidebar"
 import { NewAppointmentDialog } from "@/components/new-appointment-dialog"
 import { OnlineBooking } from "@/components/online-booking"
 import { WaitingList } from "@/components/waiting-list"
+import { AppSidebar } from "@/components/app-sidebar"
 import { mockAppointments, mockPatients, mockProfessionals } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -107,18 +108,33 @@ export default function AgendaPage() {
   }
 
   const handleAddToWaitingList = (entry: any) => {
+    setWaitingList((prev) => [...prev, entry]);
     console.log("Novo na lista de espera:", entry)
     // Aqui você integraria com seu backend
   }
 
+  const handleRemoveFromWaitingList = (entryId: string) => {
+    setWaitingList((prev) => prev.filter((entry) => entry.id !== entryId));
+    console.log("Removido da lista de espera:", entryId);
+    // Aqui você integraria com seu backend
+  }
+
+  const handleConvertToAppointment = (entry: any) => {
+    // Exemplo: converter entrada da lista de espera em agendamento
+    // Aqui você pode adicionar lógica para criar um novo agendamento
+    handleRemoveFromWaitingList(entry.id);
+    console.log("Convertido para agendamento:", entry);
+    // Aqui você integraria com seu backend
+  }
+
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen">
       <AppSidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col">
         <MainHeader />
-        <main className="flex-1 overflow-auto bg-gray-50">
-          <div className="flex flex-col h-full">
-            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="flex-1 flex flex-col">
+        <main className="flex-1 bg-gray-50">
+          <div className="flex flex-col h-full w-full max-w-full px-0">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col w-full">
               <div className="bg-white border-b border-gray-200">
                 <div className="px-6 py-4">
                   <h1 className="text-2xl font-bold text-[#5b4b8a]">Agenda</h1>
