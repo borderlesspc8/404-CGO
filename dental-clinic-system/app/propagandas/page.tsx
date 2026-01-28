@@ -1,6 +1,9 @@
+
 "use client";
 
+import { useState } from "react";
 import { MainFooter } from "@/components/main-footer";
+import { MainHeader } from "@/components/main-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +29,15 @@ interface PersonalizedAd {
 }
 
 export default function PropagandasPage() {
+	// Splash de vídeo
+	const [showVideo, setShowVideo] = useState(true);
+	// Esconde o vídeo após 8 segundos
+	React.useEffect(() => {
+		if (showVideo) {
+			const timer = setTimeout(() => setShowVideo(false), 8000);
+			return () => clearTimeout(timer);
+		}
+	}, [showVideo]);
 	// Simulação de dados
 	const [ads] = useState<PersonalizedAd[]>([
 		{
@@ -170,9 +182,32 @@ export default function PropagandasPage() {
 	}
 
 	return (
-		<div className="min-h-screen flex flex-col bg-background">
-			<MainHeader />
-			<main className="flex-1 container mx-auto py-6 px-4">
+		<>
+			{showVideo && (
+				<div style={{
+					position: 'fixed',
+					top: 0,
+					left: 0,
+					width: '100vw',
+					height: '100vh',
+					background: '#000',
+					zIndex: 9999,
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+				}}>
+					<video
+						src="/intro.mp4"
+						autoPlay
+						muted
+						style={{ maxWidth: '100vw', maxHeight: '100vh' }}
+						onEnded={() => setShowVideo(false)}
+					/>
+				</div>
+			)}
+			<div className="min-h-screen flex flex-col bg-background" style={{ filter: showVideo ? 'blur(2px)' : 'none' }}>
+				<MainHeader />
+				<main className="flex-1 container mx-auto py-6 px-4">
 				<div className="flex justify-between items-center mb-6">
 					<h1 className="text-3xl font-bold">Propagandas Personalizadas</h1>
 				</div>
@@ -247,8 +282,8 @@ export default function PropagandasPage() {
 					</TabsContent>
 				</Tabs>
 			</main>
-			<MainFooter />
-		</div>
+				<MainFooter />
+			</div>
+		</>
 	);
-
-import { MainHeader } from "@/components/main-header";
+}
