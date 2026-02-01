@@ -29,7 +29,7 @@ const statusColors: Record<Order["status"], string> = {
 
 export default function PedidosPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const { orders, getOrdersByStatus } = useOrders()
   const [mounted, setMounted] = useState(false)
   const [selectedStatus, setSelectedStatus] = useState<Order["status"] | "all">(
@@ -38,12 +38,12 @@ export default function PedidosPage() {
 
   useEffect(() => {
     setMounted(true)
-    if (!user) {
+    if (!isLoading && !user) {
       router.push("/")
     }
-  }, [user, router])
+  }, [isLoading, user, router])
 
-  if (!mounted) return null
+  if (!mounted || isLoading || !user) return null
 
   const filteredOrders =
     selectedStatus === "all"

@@ -9,6 +9,7 @@ import { CartProvider } from "@/components/shopping-cart-context"
 import { FavoritesProvider } from "@/components/favorites-context"
 import { OrdersProvider } from "@/components/orders-context"
 import { ReviewsProvider } from "@/components/reviews-context"
+import { SidebarProvider } from "@/components/sidebar-context"
 import PWAInstaller from "@/components/pwa-installer"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -86,13 +87,15 @@ export default function RootLayout({
       <body className={`font-sans antialiased`}>
         <PWAInstaller />
         <AuthProvider>
-          <CartProvider>
-            <FavoritesProvider>
-              <OrdersProvider>
-                <ReviewsProvider>{children}</ReviewsProvider>
-              </OrdersProvider>
-            </FavoritesProvider>
-          </CartProvider>
+          <SidebarProvider>
+            <CartProvider>
+              <FavoritesProvider>
+                <OrdersProvider>
+                  <ReviewsProvider>{children}</ReviewsProvider>
+                </OrdersProvider>
+              </FavoritesProvider>
+            </CartProvider>
+          </SidebarProvider>
         </AuthProvider>
         <Analytics />
       </body>

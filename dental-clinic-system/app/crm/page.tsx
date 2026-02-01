@@ -248,10 +248,10 @@ export default function CRMPage() {
             {/* Leads Tab */}
             <TabsContent value="leads" className="space-y-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-[#5b4b8a]">Leads</h2>
+                <h2 className="text-2xl font-bold text-[#50348F]">Leads</h2>
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button className="bg-[#5b4b8a] hover:bg-[#4a3a7a]">
+                    <Button className="bg-[#50348F] hover:bg-[#5D40A2]">
                       <Plus className="w-4 h-4 mr-2" />
                       Novo Lead
                     </Button>
@@ -304,7 +304,7 @@ export default function CRMPage() {
                       </div>
                       <Button
                         onClick={handleAddLead}
-                        className="w-full bg-[#5b4b8a] hover:bg-[#4a3a7a]"
+                        className="w-full bg-[#50348F] hover:bg-[#5D40A2]"
                       >
                         Adicionar Lead
                       </Button>
@@ -458,8 +458,8 @@ export default function CRMPage() {
             {/* Campanhas Tab */}
             <TabsContent value="campanhas" className="space-y-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-[#5b4b8a]">Campanhas</h2>
-                <Button className="bg-[#5b4b8a] hover:bg-[#4a3a7a]">
+                <h2 className="text-2xl font-bold text-[#50348F]">Campanhas</h2>
+                <Button className="bg-[#50348F] hover:bg-[#5D40A2]">
                   <Plus className="w-4 h-4 mr-2" />
                   Nova Campanha
                 </Button>
@@ -471,7 +471,7 @@ export default function CRMPage() {
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-[#5b4b8a]">
+                          <CardTitle className="text-[#50348F]">
                             {campaign.name}
                           </CardTitle>
                           <p className="text-sm text-gray-600 mt-2">
@@ -496,7 +496,7 @@ export default function CRMPage() {
                       </div>
                       <div className="bg-blue-50 p-3 rounded">
                         <p className="text-xs text-gray-600">Leads Gerados</p>
-                        <p className="text-2xl font-bold text-[#5b4b8a]">
+                        <p className="text-2xl font-bold text-[#50348F]">
                           {campaign.leads}
                         </p>
                       </div>
@@ -513,7 +513,7 @@ export default function CRMPage() {
 
             {/* Relatório Tab */}
             <TabsContent value="relatorio" className="space-y-6">
-              <h2 className="text-2xl font-bold text-[#5b4b8a]">Relatórios</h2>
+              <h2 className="text-2xl font-bold text-[#50348F]">Relatórios</h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card>
                   <CardHeader>
@@ -522,7 +522,7 @@ export default function CRMPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-[#5b4b8a]">
+                    <div className="text-3xl font-bold text-[#50348F]">
                       {leads.length}
                     </div>
                   </CardContent>

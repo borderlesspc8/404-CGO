@@ -16,19 +16,19 @@ import { Heart, ShoppingCart, TrendingDown, AlertCircle, Trash2 } from "lucide-r
 
 export default function FavoritosPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const { favorites, removeFavorite, getDiscountNotifications } = useFavorites()
   const { addItem } = useShoppingCart()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    if (!user) {
+    if (!isLoading && !user) {
       router.push("/")
     }
-  }, [user, router])
+  }, [isLoading, user, router])
 
-  if (!mounted) return null
+  if (!mounted || isLoading || !user) return null
 
   const favoriteProducts = favorites
     .map((fav) => {

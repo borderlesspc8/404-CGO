@@ -199,11 +199,11 @@ export default function SearchClient() {
         <AppSidebar />
         <main className="flex-1 p-6 space-y-6">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-[#5b4b8a] rounded-full text-white">
+            <div className="p-3 bg-[#50348F] rounded-full text-white">
               <SearchIcon className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#5b4b8a]">Resultados da Busca</h1>
+              <h1 className="text-2xl font-bold text-[#50348F]">Resultados da Busca</h1>
               <p className="text-sm text-muted-foreground">Termo: {query || "(vazio)"}</p>
             </div>
           </div>
@@ -226,7 +226,7 @@ export default function SearchClient() {
                 <Card key={`${result.type}-${result.id}`} className="hover:shadow-lg transition">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-[#5b4b8a]/10 text-[#5b4b8a]">
+                      <div className="p-2 rounded-full bg-[#50348F]/10 text-[#50348F]">
                         {result.icon}
                       </div>
                       <div>
@@ -240,7 +240,7 @@ export default function SearchClient() {
                     {result.description && (
                       <p className="text-sm text-muted-foreground">{result.description}</p>
                     )}
-                    <Button asChild className="w-full bg-[#5b4b8a] hover:bg-[#4a3c7a]">
+                    <Button asChild className="w-full bg-[#50348F] hover:bg-[#5D40A2]">
                       <Link href={result.link} className="flex items-center justify-center gap-2">
                         <Eye className="w-4 h-4" />
                         Ver detalhes

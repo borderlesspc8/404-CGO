@@ -31,7 +31,7 @@ import { InventoryItem, initialInventory } from "@/lib/inventory-data"
 
 export default function EstoquePage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory)
   const [searchTerm, setSearchTerm] = useState("")
   const [filteredInventory, setFilteredInventory] = useState<InventoryItem[]>(
@@ -39,10 +39,10 @@ export default function EstoquePage() {
   )
 
   useEffect(() => {
-    if (!user) {
+    if (!isLoading && !user) {
       router.push("/")
     }
-  }, [user, router])
+  }, [isLoading, user, router])
 
   useEffect(() => {
     const filtered = inventory.filter(
@@ -57,6 +57,8 @@ export default function EstoquePage() {
   const lowStockItems = inventory.filter((item) => item.quantity < item.minStock)
   const outOfStockItems = inventory.filter((item) => item.quantity <= 2)
   const totalValue = inventory.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+
+  if (isLoading || !user) return null
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {

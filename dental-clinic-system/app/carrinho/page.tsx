@@ -43,7 +43,7 @@ const shippingOptions: ShippingOption[] = [
 
 export default function CarrinhoPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useShoppingCart()
   const { addOrder } = useOrders()
   const [mounted, setMounted] = useState(false)
@@ -61,10 +61,10 @@ export default function CarrinhoPage() {
 
   useEffect(() => {
     setMounted(true)
-    if (!user) {
+    if (!isLoading && !user) {
       router.push("/")
     }
-  }, [user, router])
+  }, [isLoading, user, router])
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -100,7 +100,7 @@ export default function CarrinhoPage() {
     router.push(`/pedido-sucesso?orderId=${orderId}`)
   }
 
-  if (!mounted) return null
+  if (!mounted || isLoading || !user) return null
 
   const total = getTotal()
   

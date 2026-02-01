@@ -14,7 +14,7 @@ interface ModuleCardProps {
   color?: string
 }
 
-function ModuleCard({ title, description, href, color = "#5b4b8a" }: ModuleCardProps) {
+function ModuleCard({ title, description, href, color = "#50348F" }: ModuleCardProps) {
   return (
     <Link href={href}>
       <div
@@ -33,16 +33,16 @@ function ModuleCard({ title, description, href, color = "#5b4b8a" }: ModuleCardP
 
 
 export default function DashboardPage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const [showVideo, setShowVideo] = useState(true)
   const [fadeOut, setFadeOut] = useState(false)
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push("/")
     }
-  }, [isAuthenticated, router])
+  }, [isLoading, isAuthenticated, router])
 
   useEffect(() => {
     if (showVideo) {
@@ -54,7 +54,7 @@ export default function DashboardPage() {
     }
   }, [showVideo])
 
-  if (!isAuthenticated) {
+  if (isLoading || !isAuthenticated) {
     return null
   }
 
@@ -91,7 +91,7 @@ export default function DashboardPage() {
           <div className="max-w-7xl mx-auto">
             {/* Welcome message */}
             <div className="mb-12 text-center">
-              <h1 className="text-3xl font-semibold text-[#5b4b8a]">Olá, {user?.name}!</h1>
+              <h1 className="text-3xl font-semibold text-[#50348F]">Olá, {user?.name}!</h1>
             </div>
 
             {/* Module grid - 4 columns */}
@@ -100,25 +100,25 @@ export default function DashboardPage() {
                 title="Agenda"
                 description="Agende consultas, remarque e crie alertas de retorno para pacientes."
                 href="/agenda"
-                color="#5b4b8a"
+                color="#50348F"
               />
               <ModuleCard
                 title="Cadastro"
                 description="Cadastro de pacientes, ficha de procedimentos, financeiro, contratos e outros"
                 href="/pacientes"
-                color="#5b4b8a"
+                color="#50348F"
               />
               <ModuleCard
                 title="Financeiro"
                 description="Caixa, Conta Corrente, Fluxo de caixa, contas a receber, contas a pagar e outros"
                 href="/financeiro"
-                color="#5b4b8a"
+                color="#50348F"
               />
               <ModuleCard
                 title="Dashboard"
                 description="Entrada, Saída, Inadimplência, Parcelamentos, Oportunidade e outros"
                 href="/dashboard/analytics"
-                color="#5b4b8a"
+                color="#50348F"
               />
             </div>
 
@@ -128,25 +128,25 @@ export default function DashboardPage() {
                 title="CRM"
                 description="Controle de Campanhas, Funil de Leads, Agendamemntos, Desmarque, opção de relatório e outros"
                 href="/crm"
-                color="#5b4b8a"
+                color="#50348F"
               />
               <ModuleCard
                 title="Estoque"
                 description="Adicionar, Quantidade, Reatórios e outros"
                 href="/estoque"
-                color="#5b4b8a"
+                color="#50348F"
               />
               <ModuleCard
                 title="Relatórios"
                 description="Caixa, Pagamentos, Comissões, Contas a Pagar, Fluxo Financeiro, Inadimplentees, Oportunidades e outros"
                 href="/relatorios"
-                color="#5b4b8a"
+                color="#50348F"
               />
               <ModuleCard
                 title="Dental"
                 description="E-commerce com os melhores valores para otimizar seus lucros"
                 href="/ecommerce"
-                color="#5b4b8a"
+                color="#50348F"
               />
             </div>
           </div>

@@ -79,7 +79,7 @@ export function CalendarSidebar({
           <Button variant="ghost" size="icon" onClick={previousMonth}>
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <h3 className="font-bold text-[#5b4b8a]">
+          <h3 className="font-bold text-[#50348F]">
             {monthNames[currentDate.getMonth()]}
             <br />
             {currentDate.getFullYear()}
@@ -111,7 +111,7 @@ export function CalendarSidebar({
                 key={day}
                 onClick={() => selectDay(day)}
                 className={`aspect-square flex items-center justify-center rounded ${
-                  isToday ? "bg-[#5b4b8a] text-white font-bold" : "hover:bg-gray-100"
+                  isToday ? "bg-[#50348F] text-white font-bold" : "hover:bg-gray-100"
                 }`}
               >
                 {day}
@@ -126,7 +126,7 @@ export function CalendarSidebar({
       {/* Professionals list */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="p-4 border-b border-gray-200">
-          <h4 className="font-semibold text-[#5b4b8a] mb-2 flex items-center justify-between">
+          <h4 className="font-semibold text-[#50348F] mb-2 flex items-center justify-between">
             Profissionais
             <Button variant="ghost" size="sm">
               <ChevronLeft className="w-4 h-4" />
@@ -173,7 +173,7 @@ export function CalendarSidebar({
         {/* Alerts section */}
         <div className="p-4 border-t border-gray-200">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-[#5b4b8a] text-sm">Alertas de Retorno</h4>
+            <h4 className="font-semibold text-[#50348F] text-sm">Alertas de Retorno</h4>
             <Button variant="ghost" size="sm">
               <ChevronLeft className="w-4 h-4" />
             </Button>

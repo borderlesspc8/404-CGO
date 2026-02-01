@@ -16,7 +16,7 @@ import { ShoppingCart, TrendingUp, Heart, TrendingDown } from "lucide-react"
 
 export default function EcommercePage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const { getItemCount } = useShoppingCart()
   const { getFavoriteCount, getDiscountNotifications } = useFavorites()
   const [itemCount, setItemCount] = useState(0)
@@ -24,13 +24,15 @@ export default function EcommercePage() {
   const [discountNotifications, setDiscountNotifications] = useState<any[]>([])
 
   useEffect(() => {
-    if (!user) {
+    if (!isLoading && !user) {
       router.push("/")
     }
     setItemCount(getItemCount())
     setFavoriteCount(getFavoriteCount())
     setDiscountNotifications(getDiscountNotifications())
-  }, [user, router, getItemCount, getFavoriteCount, getDiscountNotifications])
+  }, [isLoading, user, router, getItemCount, getFavoriteCount, getDiscountNotifications])
+
+  if (isLoading || !user) return null
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

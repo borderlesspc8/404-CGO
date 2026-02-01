@@ -123,3 +123,48 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hamburger menu - From Uiverse.io by JulanDeAlb */
+.hamburger input {
+  display: none;
+}
+
+.hamburger-svg {
+  transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hamburger .line {
+  fill: none;
+  stroke: #50348F;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+  transition:
+    stroke-dasharray 600ms cubic-bezier(0.4, 0, 0.2, 1),
+    stroke-dashoffset 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hamburger .line-top-bottom {
+  stroke-dasharray: 12 63;
+}
+
+.hamburger input:checked + .hamburger-svg,
+.hamburger:has(input:checked) .hamburger-svg {
+  transform: rotate(-45deg);
+}
+
+.hamburger input:checked + .hamburger-svg .line-top-bottom,
+.hamburger:has(input:checked) .line-top-bottom {
+  stroke-dasharray: 20 300;
+  stroke-dashoffset: -32.42;
+}
+
+/* Sidebar push layout - sincroniza sidebar e conteúdo */
+body {
+  transition: margin-left 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-x: hidden;
+}
+
+body.sidebar-open {
+  margin-left: 13rem; /* w-52 = 208px */
+}

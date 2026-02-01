@@ -53,17 +53,17 @@ export function NewAppointmentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-[#5b4b8a] text-xl">Novo Agendamento</DialogTitle>
+          <DialogTitle className="text-[#50348F] text-xl">Novo Agendamento</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="patient" className="text-[#5b4b8a] font-semibold">
+              <Label htmlFor="patient" className="text-[#50348F] font-semibold">
                 Paciente
               </Label>
               <Select value={patientId} onValueChange={setPatientId}>
-                <SelectTrigger id="patient" className="border-[#5b4b8a]/30">
+                <SelectTrigger id="patient" className="border-[#50348F]/30">
                   <SelectValue placeholder="Selecione o paciente" />
                 </SelectTrigger>
                 <SelectContent>
@@ -77,11 +77,11 @@ export function NewAppointmentDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="professional" className="text-[#5b4b8a] font-semibold">
+              <Label htmlFor="professional" className="text-[#50348F] font-semibold">
                 Profissional
               </Label>
               <Select value={professionalId} onValueChange={setProfessionalId}>
-                <SelectTrigger id="professional" className="border-[#5b4b8a]/30">
+                <SelectTrigger id="professional" className="border-[#50348F]/30">
                   <SelectValue placeholder="Selecione o profissional" />
                 </SelectTrigger>
                 <SelectContent>
@@ -97,7 +97,7 @@ export function NewAppointmentDialog({
 
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="date" className="text-[#5b4b8a] font-semibold">
+              <Label htmlFor="date" className="text-[#50348F] font-semibold">
                 Data
               </Label>
               <Input
@@ -105,13 +105,13 @@ export function NewAppointmentDialog({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="border-[#5b4b8a]/30"
+                className="border-[#50348F]/30"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="startTime" className="text-[#5b4b8a] font-semibold">
+              <Label htmlFor="startTime" className="text-[#50348F] font-semibold">
                 Horário Início
               </Label>
               <Input
@@ -119,13 +119,13 @@ export function NewAppointmentDialog({
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="border-[#5b4b8a]/30"
+                className="border-[#50348F]/30"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endTime" className="text-[#5b4b8a] font-semibold">
+              <Label htmlFor="endTime" className="text-[#50348F] font-semibold">
                 Horário Fim
               </Label>
               <Input
@@ -133,14 +133,14 @@ export function NewAppointmentDialog({
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="border-[#5b4b8a]/30"
+                className="border-[#50348F]/30"
                 required
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="type" className="text-[#5b4b8a] font-semibold">
+            <Label htmlFor="type" className="text-[#50348F] font-semibold">
               Tipo de Procedimento
             </Label>
             <Input
@@ -148,13 +148,13 @@ export function NewAppointmentDialog({
               value={type}
               onChange={(e) => setType(e.target.value)}
               placeholder="Ex: Avaliação, Limpeza, Consulta"
-              className="border-[#5b4b8a]/30"
+              className="border-[#50348F]/30"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes" className="text-[#5b4b8a] font-semibold">
+            <Label htmlFor="notes" className="text-[#50348F] font-semibold">
               Observações
             </Label>
             <Textarea
@@ -162,7 +162,7 @@ export function NewAppointmentDialog({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Adicione observações sobre o agendamento"
-              className="border-[#5b4b8a]/30 min-h-[100px]"
+              className="border-[#50348F]/30 min-h-[100px]"
             />
           </div>
 
@@ -170,7 +170,7 @@ export function NewAppointmentDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="bg-[#c9b888] hover:bg-[#b8a777] text-[#5b4b8a] font-semibold">
+            <Button type="submit" className="bg-[#B8AF39] hover:bg-[#F7E70F] text-[#50348F] font-semibold">
               Criar Agendamento
             </Button>
           </DialogFooter>

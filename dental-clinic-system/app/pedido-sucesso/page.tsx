@@ -14,7 +14,7 @@ import { CheckCircle, Download, Home, Package } from "lucide-react"
 function PedidoSucessoContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const { getOrderById } = useOrders()
   const [mounted, setMounted] = useState(false)
 
@@ -23,12 +23,12 @@ function PedidoSucessoContent() {
 
   useEffect(() => {
     setMounted(true)
-    if (!user) {
+    if (!isLoading && !user) {
       router.push("/")
     }
-  }, [user, router])
+  }, [isLoading, user, router])
 
-  if (!mounted) return null
+  if (!mounted || isLoading || !user) return null
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {

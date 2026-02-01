@@ -90,7 +90,7 @@ const initialTransactions = [
 ]
 
 export default function FinanceiroPage() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [transactions, setTransactions] = useState(initialTransactions)
@@ -108,12 +108,12 @@ export default function FinanceiroPage() {
   })
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push("/")
     }
-  }, [isAuthenticated, router])
+  }, [isLoading, isAuthenticated, router])
 
-  if (!isAuthenticated) {
+  if (isLoading || !isAuthenticated) {
     return null
   }
 
@@ -187,7 +187,7 @@ export default function FinanceiroPage() {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-[#5b4b8a]">Financeiro</h1>
+            <h1 className="text-3xl font-bold text-[#50348F]">Financeiro</h1>
             <div className="flex gap-3">
               <Button 
                 className="bg-red-500 hover:bg-red-600 text-white"
@@ -236,10 +236,10 @@ export default function FinanceiroPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-[#5b4b8a]">
+            <Card className="border-l-4 border-l-[#50348F]">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
-                  <Wallet className="w-4 h-4 text-[#5b4b8a]" />
+                  <Wallet className="w-4 h-4 text-[#50348F]" />
                   Saldo
                 </CardTitle>
               </CardHeader>

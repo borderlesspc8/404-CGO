@@ -6,8 +6,9 @@ import { useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { LogOut, Menu, Search, User, ShoppingCart } from "lucide-react"
+import { LogOut, Search, User, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { HamburgerMenu } from "@/components/hamburger-menu"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -20,12 +21,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { AppSidebar } from "@/components/app-sidebar"
 import { useShoppingCart } from "@/components/shopping-cart-context"
+import { useSidebar } from "@/components/sidebar-context"
 
 export function MainHeader() {
   const { user, logout } = useAuth()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { sidebarOpen, toggleSidebar, setSidebarOpen } = useSidebar()
   const { getItemCount } = useShoppingCart()
   const cartCount = getItemCount()
 
@@ -48,27 +50,23 @@ export function MainHeader() {
     <>
       <AppSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <header className="bg-[#5b4b8a] px-4 py-1 flex items-center justify-between gap-6">
+      <header className="bg-[#787443] px-4 py-2 h-[90px] flex items-center justify-between gap-6 shrink-0">
         {/* Left side: Menu and Logo */}
         <div className="flex items-center gap-3 flex-shrink-0">
-          {/* Menu button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="bg-[#c9b888] hover:bg-[#b8a777] rounded-full w-12 h-12 shrink-0"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="w-6 h-6 text-[#5b4b8a]" />
-          </Button>
+          {/* Menu button - Hamburger animado */}
+          <HamburgerMenu
+            checked={sidebarOpen}
+            onToggle={toggleSidebar}
+          />
 
-          {/* Logo - Much more visible */}
-          <div className="flex items-center ml-16">
+          {/* Logo - transborda sem aumentar header */}
+          <div className="flex items-center ml-16 -my-4">
             <Image
               src="/logo-oris.png"
               alt="Oris - Gestão Odontológica"
               width={500}
               height={175}
-              className="h-32 w-auto object-contain drop-shadow-2xl"
+              className="h-48 w-auto object-contain drop-shadow-2xl"
               priority
             />
           </div>
@@ -83,11 +81,11 @@ export function MainHeader() {
                 placeholder="Encontre pacientes ou funções do sistema"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white rounded-full pl-6 pr-12 py-6 text-[#5b4b8a] placeholder:text-[#5b4b8a]/50"
+                className="w-full bg-white rounded-full pl-6 pr-12 py-3 h-11 text-[#50348F] placeholder:text-[#50348F]/50"
               />
               <button
                 type="submit"
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#5b4b8a] hover:text-[#5b4b8a]/70"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#50348F] hover:text-[#50348F]/70"
               >
                 <Search className="w-5 h-5" />
               </button>
@@ -101,7 +99,7 @@ export function MainHeader() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative hover:bg-[#5b4b8a]/80"
+          className="relative hover:bg-[#787443]/80"
           onClick={() => router.push("/carrinho")}
         >
           <ShoppingCart className="w-6 h-6 text-white" />
@@ -114,11 +112,11 @@ export function MainHeader() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-3 hover:bg-[#5b4b8a]/80">
+              <Button variant="ghost" className="flex items-center gap-3 hover:bg-[#787443]/80">
                 <span className="text-white font-medium">{user?.name || "Usuário"}</span>
                 <Avatar className="w-10 h-10 border-2 border-white">
                   <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
-                  <AvatarFallback className="bg-[#c9b888] text-[#5b4b8a] font-bold">
+                  <AvatarFallback className="bg-[#B8AF39] text-[#50348F] font-bold">
                     {user?.name?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
@@ -126,15 +124,15 @@ export function MainHeader() {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-60 rounded-2xl border border-[#e5e2f5] bg-white shadow-lg shadow-[#2c1f5b]/20"
+              className="w-60 rounded-2xl border border-[#e5e2f5] bg-white shadow-lg shadow-[#787443]/20"
             >
-              <DropdownMenuLabel className="text-[#2c1f5b] font-semibold px-4 py-3">
+              <DropdownMenuLabel className="text-[#50348F] font-semibold px-4 py-3">
                 Minha Conta
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-[#e5e2f5]" />
               <DropdownMenuItem
                 onClick={handleProfile}
-                className="mx-2 my-2 flex items-center gap-2 rounded-lg bg-[#c9b888] text-[#2c1f5b] font-medium hover:bg-[#b8a777]"
+                className="mx-2 my-2 flex items-center gap-2 rounded-lg bg-[#B8AF39] text-[#50348F] font-medium hover:bg-[#F7E70F]"
               >
                 <User className="h-4 w-4" />
                 Perfil

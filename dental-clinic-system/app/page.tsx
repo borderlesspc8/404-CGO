@@ -9,13 +9,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { MessageCircle } from "lucide-react"
+import { MessageCircle, Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [greeting, setGreeting] = useState("Boa Tarde!")
 
@@ -60,7 +61,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header with purple background */}
+      {/* Header - cores originais */}
       <header className="bg-[#5b4b8a] py-8 px-6 text-center">
         <h1 className="text-[#c9b888] text-4xl font-bold tracking-wider">PROPAGANDA</h1>
       </header>
@@ -95,14 +96,29 @@ export default function LoginPage() {
                 <Label htmlFor="password" className="text-[#5b4b8a] font-semibold">
                   Senha
                 </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="border-[#5b4b8a]/20 focus:border-[#5b4b8a] focus:ring-[#5b4b8a]"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="border-[#5b4b8a]/20 focus:border-[#5b4b8a] focus:ring-[#5b4b8a] pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5b4b8a]/70 hover:text-[#5b4b8a] focus:outline-none"
+                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center space-x-2">

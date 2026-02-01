@@ -186,7 +186,7 @@ const mockOpportunities: SalesOpportunity[] = [
 
 export default function RelatoriosPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const [opportunities, setOpportunities] = useState<SalesOpportunity[]>(mockOpportunities)
   const [filteredData, setFilteredData] = useState<SalesOpportunity[]>(mockOpportunities)
   const [filters, setFilters] = useState<FilterState>({
@@ -217,10 +217,10 @@ export default function RelatoriosPage() {
   })
 
   useEffect(() => {
-    if (!user) {
+    if (!isLoading && !user) {
       router.push("/")
     }
-  }, [user, router])
+  }, [isLoading, user, router])
 
   // Aplicar filtros
   useEffect(() => {
@@ -348,6 +348,8 @@ export default function RelatoriosPage() {
       nextActionDate: "",
     })
   }
+
+  if (isLoading || !user) return null
 
   // Cálculos para o resumo
   const totalValue = filteredData.reduce((sum, item) => sum + item.value, 0)

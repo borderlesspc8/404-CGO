@@ -229,6 +229,43 @@ export const mockAppointments: Appointment[] = [
     createdBy: "Secretária",
     createdAt: "2025-11-15T10:30:00",
   },
+  // Consultas em outros dias para demonstrar filtro por data
+  {
+    id: "5",
+    patientId: "5083",
+    professionalId: "1",
+    date: "2025-11-18",
+    startTime: "10:00",
+    endTime: "11:00",
+    status: "scheduled",
+    type: "Consulta",
+    createdBy: "Admin",
+    createdAt: "2025-11-14T10:00:00",
+  },
+  {
+    id: "6",
+    patientId: "5084",
+    professionalId: "2",
+    date: "2025-11-19",
+    startTime: "11:00",
+    endTime: "12:00",
+    status: "scheduled",
+    type: "Avaliação",
+    createdBy: "Admin",
+    createdAt: "2025-11-14T10:00:00",
+  },
+  {
+    id: "7",
+    patientId: "5083",
+    professionalId: "4",
+    date: "2025-11-20",
+    startTime: "14:00",
+    endTime: "15:00",
+    status: "scheduled",
+    type: "Consulta Saúde",
+    createdBy: "Admin",
+    createdAt: "2025-11-14T10:00:00",
+  },
 ]
 
 // Mock Procedures for a patient

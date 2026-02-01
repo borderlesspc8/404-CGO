@@ -48,15 +48,15 @@ export default function ConfiguracoesPage() {
       <MainHeader />
       <main className="container mx-auto px-4 py-8 max-w-5xl">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-[#2c1f5b] mb-2">Configurações</h1>
-          <p className="text-[#5b4b8a]">Personalize sua experiência no sistema</p>
+          <h1 className="text-4xl font-bold text-[#50348F] mb-2">Configurações</h1>
+          <p className="text-[#50348F]">Personalize sua experiência no sistema</p>
         </div>
 
         <div className="space-y-6">
           {/* Aparência */}
           <Card className="border-[#e5e2f5] shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-[#2c1f5b]">
+              <CardTitle className="flex items-center gap-2 text-[#50348F]">
                 <Palette className="w-5 h-5" />
                 Aparência
               </CardTitle>
@@ -64,14 +64,14 @@ export default function ConfiguracoesPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
-                <Label htmlFor="theme" className="text-base font-medium text-[#2c1f5b]">
+                <Label htmlFor="theme" className="text-base font-medium text-[#50348F]">
                   Tema
                 </Label>
                 <div className="grid grid-cols-3 gap-3">
                   <Button
                     variant={theme === "light" ? "default" : "outline"}
                     className={`flex items-center gap-2 justify-center ${
-                      theme === "light" ? "bg-[#5b4b8a] hover:bg-[#4a3a79]" : ""
+                      theme === "light" ? "bg-[#50348F] hover:bg-[#5D40A2]" : ""
                     }`}
                     onClick={() => setTheme("light")}
                   >
@@ -81,7 +81,7 @@ export default function ConfiguracoesPage() {
                   <Button
                     variant={theme === "dark" ? "default" : "outline"}
                     className={`flex items-center gap-2 justify-center ${
-                      theme === "dark" ? "bg-[#5b4b8a] hover:bg-[#4a3a79]" : ""
+                      theme === "dark" ? "bg-[#50348F] hover:bg-[#5D40A2]" : ""
                     }`}
                     onClick={() => setTheme("dark")}
                   >
@@ -91,7 +91,7 @@ export default function ConfiguracoesPage() {
                   <Button
                     variant={theme === "system" ? "default" : "outline"}
                     className={`flex items-center gap-2 justify-center ${
-                      theme === "system" ? "bg-[#5b4b8a] hover:bg-[#4a3a79]" : ""
+                      theme === "system" ? "bg-[#50348F] hover:bg-[#5D40A2]" : ""
                     }`}
                     onClick={() => setTheme("system")}
                   >
@@ -104,7 +104,7 @@ export default function ConfiguracoesPage() {
               <Separator className="bg-[#e5e2f5]" />
 
               <div className="space-y-3">
-                <Label htmlFor="fontSize" className="text-base font-medium text-[#2c1f5b]">
+                <Label htmlFor="fontSize" className="text-base font-medium text-[#50348F]">
                   Tamanho da Fonte
                 </Label>
                 <Select
@@ -124,10 +124,10 @@ export default function ConfiguracoesPage() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label htmlFor="compact-view" className="text-base font-medium text-[#2c1f5b]">
+                  <Label htmlFor="compact-view" className="text-base font-medium text-[#50348F]">
                     Visualização Compacta
                   </Label>
-                  <p className="text-sm text-[#5b4b8a]">Reduz o espaçamento entre elementos</p>
+                  <p className="text-sm text-[#50348F]">Reduz o espaçamento entre elementos</p>
                 </div>
                 <Switch
                   id="compact-view"
@@ -141,7 +141,7 @@ export default function ConfiguracoesPage() {
           {/* Notificações */}
           <Card className="border-[#e5e2f5] shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-[#2c1f5b]">
+              <CardTitle className="flex items-center gap-2 text-[#50348F]">
                 <Bell className="w-5 h-5" />
                 Notificações
               </CardTitle>
@@ -150,10 +150,10 @@ export default function ConfiguracoesPage() {
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label htmlFor="notifications" className="text-base font-medium text-[#2c1f5b]">
+                  <Label htmlFor="notifications" className="text-base font-medium text-[#50348F]">
                     Notificações do Sistema
                   </Label>
-                  <p className="text-sm text-[#5b4b8a]">Receba alertas sobre eventos importantes</p>
+                  <p className="text-sm text-[#50348F]">Receba alertas sobre eventos importantes</p>
                 </div>
                 <Switch
                   id="notifications"
@@ -166,10 +166,10 @@ export default function ConfiguracoesPage() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label htmlFor="email-notifications" className="text-base font-medium text-[#2c1f5b]">
+                  <Label htmlFor="email-notifications" className="text-base font-medium text-[#50348F]">
                     Notificações por E-mail
                   </Label>
-                  <p className="text-sm text-[#5b4b8a]">Receba atualizações via e-mail</p>
+                  <p className="text-sm text-[#50348F]">Receba atualizações via e-mail</p>
                 </div>
                 <Switch
                   id="email-notifications"
@@ -182,10 +182,10 @@ export default function ConfiguracoesPage() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label htmlFor="sound-effects" className="text-base font-medium text-[#2c1f5b]">
+                  <Label htmlFor="sound-effects" className="text-base font-medium text-[#50348F]">
                     Efeitos Sonoros
                   </Label>
-                  <p className="text-sm text-[#5b4b8a]">Reproduzir sons ao receber notificações</p>
+                  <p className="text-sm text-[#50348F]">Reproduzir sons ao receber notificações</p>
                 </div>
                 <Switch
                   id="sound-effects"
@@ -199,7 +199,7 @@ export default function ConfiguracoesPage() {
           {/* Preferências Gerais */}
           <Card className="border-[#e5e2f5] shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-[#2c1f5b]">
+              <CardTitle className="flex items-center gap-2 text-[#50348F]">
                 <Globe className="w-5 h-5" />
                 Preferências Gerais
               </CardTitle>
@@ -207,7 +207,7 @@ export default function ConfiguracoesPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
-                <Label htmlFor="language" className="text-base font-medium text-[#2c1f5b]">
+                <Label htmlFor="language" className="text-base font-medium text-[#50348F]">
                   Idioma
                 </Label>
                 <Select
@@ -229,10 +229,10 @@ export default function ConfiguracoesPage() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label htmlFor="auto-save" className="text-base font-medium text-[#2c1f5b]">
+                  <Label htmlFor="auto-save" className="text-base font-medium text-[#50348F]">
                     Salvamento Automático
                   </Label>
-                  <p className="text-sm text-[#5b4b8a]">Salvar alterações automaticamente</p>
+                  <p className="text-sm text-[#50348F]">Salvar alterações automaticamente</p>
                 </div>
                 <Switch
                   id="auto-save"
@@ -248,13 +248,13 @@ export default function ConfiguracoesPage() {
             <Button
               variant="outline"
               onClick={() => window.location.reload()}
-              className="border-[#5b4b8a] text-[#5b4b8a] hover:bg-[#5b4b8a]/10"
+              className="border-[#50348F] text-[#50348F] hover:bg-[#50348F]/10"
             >
               Cancelar
             </Button>
             <Button
               onClick={handleSave}
-              className="bg-[#5b4b8a] hover:bg-[#4a3a79] text-white flex items-center gap-2"
+              className="bg-[#50348F] hover:bg-[#5D40A2] text-white flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
               Salvar Configurações

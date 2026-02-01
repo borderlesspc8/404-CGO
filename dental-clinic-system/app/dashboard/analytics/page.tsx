@@ -66,16 +66,16 @@ const opportunitiesData = [
 ]
 
 export default function AnalyticsPage() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push("/")
     }
-  }, [isAuthenticated, router])
+  }, [isLoading, isAuthenticated, router])
 
-  if (!isAuthenticated) {
+  if (isLoading || !isAuthenticated) {
     return null
   }
 
@@ -94,7 +94,7 @@ export default function AnalyticsPage() {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-[#5b4b8a]">Dashboard & Analytics</h1>
+            <h1 className="text-3xl font-bold text-[#50348F]">Dashboard & Analytics</h1>
             <p className="text-gray-600 mt-2">Visão geral do desempenho da clínica</p>
           </div>
 
@@ -140,15 +140,15 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-[#5b4b8a]">
+            <Card className="border-l-4 border-l-[#50348F]">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium text-gray-600">Lucro Líquido</CardTitle>
-                  <DollarSign className="w-4 h-4 text-[#5b4b8a]" />
+                  <DollarSign className="w-4 h-4 text-[#50348F]" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-[#5b4b8a]">
+                <div className="text-2xl font-bold text-[#50348F]">
                   R$ {currentMonth.lucro.toLocaleString('pt-BR')}
                 </div>
                 <div className="mt-2">
@@ -282,7 +282,7 @@ export default function AnalyticsPage() {
                           <TableCell className="text-right text-red-500 font-semibold">
                             R$ {data.despesas.toLocaleString('pt-BR')}
                           </TableCell>
-                          <TableCell className="text-right text-[#5b4b8a] font-semibold">
+                          <TableCell className="text-right text-[#50348F] font-semibold">
                             R$ {data.lucro.toLocaleString('pt-BR')}
                           </TableCell>
                           <TableCell className="text-right">
