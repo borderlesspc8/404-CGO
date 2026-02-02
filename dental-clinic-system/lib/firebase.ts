@@ -1,5 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app"
 import { getAnalytics, type Analytics, isSupported } from "firebase/analytics"
+import { getFirestore, type Firestore } from "firebase/firestore"
 
 // Configuração do Firebase (variáveis em .env.local)
 const firebaseConfig = {
@@ -28,6 +29,14 @@ export const getFirebaseAnalytics = async (): Promise<Analytics | null> => {
     return analytics
   }
   return null
+}
+
+let db: Firestore | null = null
+
+export const getDb = (): Firestore | null => {
+  if (typeof window === "undefined") return null
+  if (!db) db = getFirestore(app)
+  return db
 }
 
 export { app }

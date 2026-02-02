@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { MainHeader } from "@/components/main-header"
 import { MainFooter } from "@/components/main-footer"
-import { CalendarSidebar } from "@/components/calendar-sidebar"
 import { NewAppointmentDialog } from "@/components/new-appointment-dialog"
 import { OnlineBooking } from "@/components/online-booking"
 import { WaitingList } from "@/components/waiting-list"
 import { AppSidebar } from "@/components/app-sidebar"
-import { mockAppointments, mockPatients, mockProfessionals } from "@/lib/mock-data"
+import { mockPatients, mockProfessionals, mockSpecialties } from "@/lib/mock-data"
+import { useAppointments } from "@/hooks/use-appointments"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ChevronLeft, ChevronRight, CalendarIcon, Settings, Plus, Globe, Clock } from "lucide-react"
+import { ChevronLeft, ChevronRight, CalendarIcon, Settings, Plus } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ptBR } from "date-fns/locale"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -24,7 +24,7 @@ import { toast } from "@/components/ui/use-toast"
 export default function AgendaPage() {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 17)) // November 17, 2025
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 17))
   const [selectedProfessionals, setSelectedProfessionals] = useState<string[]>(mockProfessionals.map((p) => p.id))
   const [selectedAppointment, setSelectedAppointment] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<"day" | "week">("week")
@@ -33,36 +33,6 @@ export default function AgendaPage() {
   const [activeTab, setActiveTab] = useState("calendar")
   const [calendarOpen, setCalendarOpen] = useState(false)
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/")
-    }
-  }, [isLoading, isAuthenticated, router])
-
-  if (isLoading || !isAuthenticated) {
-    return null
-  }
-
-  const toggleProfessional = (professionalId: string) => {
-    setSelectedProfessionals((prev) =>
-      prev.includes(professionalId) ? prev.filter((id) => id !== professionalId) : [...prev, professionalId],
-    )
-  }
-
-  const filteredProfessionals = mockProfessionals.filter((prof) => selectedProfessionals.includes(prof.id))
-
-  // Generate time slots from 10:00 to 15:00
-  const timeSlots = []
-  for (let hour = 10; hour <= 15; hour++) {
-    timeSlots.push(`${hour.toString().padStart(2, "0")}:00`)
-    if (hour < 15) {
-      timeSlots.push(`${hour.toString().padStart(2, "0")}:15`)
-      timeSlots.push(`${hour.toString().padStart(2, "0")}:30`)
-      timeSlots.push(`${hour.toString().padStart(2, "0")}:45`)
-    }
-  }
-
-  // Get week dates
   const getWeekDates = (date: Date) => {
     const d = new Date(date)
     const day = d.getDay()
@@ -83,61 +53,74 @@ export default function AgendaPage() {
   const formatDateKey = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 
+  const dateRangeStart = formatDateKey(viewMode === "day" ? currentDate : weekDates[0])
+  const dateRangeEnd = formatDateKey(viewMode === "day" ? currentDate : weekDates[6])
+  const {
+    appointments: appointmentsFromFirebase,
+    loading: appointmentsLoading,
+    error: appointmentsError,
+    refetch: refetchAppointments,
+  } = useAppointments(dateRangeStart, dateRangeEnd)
+
   const datesToShow = viewMode === "day" ? [currentDate] : weekDates
 
   const appointmentMatchesDate = (aptDate: string, d: Date) => aptDate === formatDateKey(d)
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/")
+    }
+  }, [isLoading, isAuthenticated, router])
+
+  if (isLoading || !isAuthenticated) {
+    return null
+  }
+
+  const toggleProfessional = (professionalId: string) => {
+    setSelectedProfessionals((prev) =>
+      prev.includes(professionalId) ? prev.filter((id) => id !== professionalId) : [...prev, professionalId],
+    )
+  }
+
+  const filteredProfessionals = mockProfessionals.filter((prof) => selectedProfessionals.includes(prof.id))
+
+  const timeSlots: string[] = []
+  for (let hour = 10; hour <= 15; hour++) {
+    timeSlots.push(`${hour.toString().padStart(2, "0")}:00`)
+    if (hour < 15) {
+      timeSlots.push(`${hour.toString().padStart(2, "0")}:15`)
+      timeSlots.push(`${hour.toString().padStart(2, "0")}:30`)
+      timeSlots.push(`${hour.toString().padStart(2, "0")}:45`)
+    }
+  }
 
   const dayNames = ["D", "S", "T", "Q", "Q", "S", "S"]
   const fullDayNames = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"]
 
   const formatDateForDisplay = (date: Date) => {
     return `${fullDayNames[date.getDay()]}, ${date.getDate()} de ${
-      [
-        "Janeiro",
-        "Fevereiro",
-        "Março",
-        "Abril",
-        "Maio",
-        "Junho",
-        "Julho",
-        "Agosto",
-        "Setembro",
-        "Outubro",
-        "Novembro",
-        "Dezembro",
-      ][date.getMonth()]
+      ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"][date.getMonth()]
     } ${date.getFullYear()}`
   }
 
-  const appointment = mockAppointments.find((a) => a.id === selectedAppointment)
+  const appointment = appointmentsFromFirebase.find((a) => a.id === selectedAppointment)
   const appointmentPatient = appointment ? mockPatients.find((p) => p.id === appointment.patientId) : null
-  const appointmentProfessional = appointment
-    ? mockProfessionals.find((p) => p.id === appointment.professionalId)
-    : null
+  const appointmentProfessional = appointment ? mockProfessionals.find((p) => p.id === appointment.professionalId) : null
 
   const handleOnlineBookingComplete = (booking: any) => {
     console.log("Nova reserva online:", booking)
-    // Aqui você integraria com seu backend
   }
 
   const handleAddToWaitingList = (entry: any) => {
-    setWaitingList((prev) => [...prev, entry]);
-    console.log("Novo na lista de espera:", entry)
-    // Aqui você integraria com seu backend
+    setWaitingList((prev) => [...prev, entry])
   }
 
   const handleRemoveFromWaitingList = (entryId: string) => {
-    setWaitingList((prev) => prev.filter((entry) => entry.id !== entryId));
-    console.log("Removido da lista de espera:", entryId);
-    // Aqui você integraria com seu backend
+    setWaitingList((prev) => prev.filter((entry) => entry.id !== entryId))
   }
 
   const handleConvertToAppointment = (entry: any) => {
-    // Exemplo: converter entrada da lista de espera em agendamento
-    // Aqui você pode adicionar lógica para criar um novo agendamento
-    handleRemoveFromWaitingList(entry.id);
-    console.log("Convertido para agendamento:", entry);
-    // Aqui você integraria com seu backend
+    handleRemoveFromWaitingList(entry.id)
   }
 
   return (
@@ -160,7 +143,6 @@ export default function AgendaPage() {
               </div>
 
               <TabsContent value="calendar" className="mt-0 p-0">
-                {/* Calendar header */}
                 <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <h2 className="text-sm font-semibold text-[#50348F]">Correia Andradina</h2>
@@ -256,10 +238,18 @@ export default function AgendaPage() {
                   </div>
                 </div>
 
-                {/* Calendar grid */}
-                <div className="flex-1 overflow-auto">
+                <div className="flex-1 overflow-auto relative">
+                  {appointmentsError && (
+                    <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm z-20">
+                      {appointmentsError}
+                    </div>
+                  )}
+                  {appointmentsLoading && (
+                    <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
+                      <div className="text-[#50348F] font-medium">Carregando consultas...</div>
+                    </div>
+                  )}
                   <div className={viewMode === "day" ? "min-w-[1100px]" : "min-w-[1340px]"}>
-                    {/* Column headers - cada profissional em sua própria coluna */}
                     <div
                       className={`grid border-b border-gray-300 bg-white sticky top-0 z-10 ${
                         viewMode === "day"
@@ -267,13 +257,10 @@ export default function AgendaPage() {
                           : "grid-cols-[minmax(360px,380px)_repeat(7,minmax(140px,1fr))]"
                       }`}
                     >
-                      {/* Coluna esquerda: dia(s) ou horários */}
                       <div className="border-r border-gray-300 p-3 flex flex-col gap-1 min-w-0">
                         {viewMode === "day" ? (
                           <div className="flex flex-col items-center justify-center gap-1">
-                            <span className="text-gray-500 font-medium text-xs">
-                              {dayNames[currentDate.getDay()]}
-                            </span>
+                            <span className="text-gray-500 font-medium text-xs">{dayNames[currentDate.getDay()]}</span>
                             <span className="text-lg font-bold text-[#50348F]">{currentDate.getDate()}</span>
                           </div>
                         ) : (
@@ -297,12 +284,8 @@ export default function AgendaPage() {
                           </div>
                         )}
                       </div>
-                      {/* 7 colunas: um profissional por coluna */}
                       {filteredProfessionals.slice(0, 7).map((professional) => (
-                        <div
-                          key={professional.id}
-                          className="border-r border-gray-300 p-3 min-w-0"
-                        >
+                        <div key={professional.id} className="border-r border-gray-300 p-3 min-w-0">
                           <p
                             className="text-sm font-semibold truncate text-center"
                             style={{ color: professional.color }}
@@ -314,7 +297,6 @@ export default function AgendaPage() {
                       ))}
                     </div>
 
-                    {/* Time slots and appointments */}
                     <div className="relative">
                       {timeSlots.map((time) => (
                         <div
@@ -325,16 +307,16 @@ export default function AgendaPage() {
                               : "grid-cols-[minmax(360px,380px)_repeat(7,minmax(140px,1fr))]"
                           }`}
                         >
-                          <div className="border-r border-gray-300 p-2 text-xs text-gray-500 text-right pr-2">{time}</div>
+                          <div className="border-r border-gray-300 p-2 text-xs text-gray-500 text-right pr-2">
+                            {time}
+                          </div>
                           {filteredProfessionals.slice(0, 7).map((professional) => {
-                            // Find appointments for this professional at this time (filtered by date)
-                            const appointmentsHere = mockAppointments.filter(
+                            const appointmentsHere = appointmentsFromFirebase.filter(
                               (apt) =>
                                 apt.professionalId === professional.id &&
                                 apt.startTime === time &&
                                 datesToShow.some((d) => appointmentMatchesDate(apt.date, d)),
                             )
-
                             return (
                               <div
                                 key={professional.id}
@@ -350,7 +332,6 @@ export default function AgendaPage() {
                                     Number.parseInt(apt.endTime.split(":")[0]) * 60 +
                                     Number.parseInt(apt.endTime.split(":")[1])
                                   const durationSlots = (endMinutes - startMinutes) / 15
-
                                   return (
                                     <button
                                       key={apt.id}
@@ -378,19 +359,21 @@ export default function AgendaPage() {
                         </div>
                       ))}
                     </div>
+                  </div>
                 </div>
-              </div>
               </TabsContent>
 
-              {/* Agendamento Online Tab */}
               <TabsContent value="online" className="mt-0 p-6">
                 <OnlineBooking
-                  professionals={mockProfessionals}
+                  professionals={mockProfessionals.map((p) => ({
+                    id: p.id,
+                    name: p.name,
+                    specialty: mockSpecialties.find((s) => s.id === p.specialtyId)?.name ?? "Geral",
+                  }))}
                   onBookingComplete={handleOnlineBookingComplete}
                 />
               </TabsContent>
 
-              {/* Fila de Espera Tab */}
               <TabsContent value="waiting" className="mt-0 p-6">
                 <WaitingList
                   entries={waitingList}
@@ -404,6 +387,7 @@ export default function AgendaPage() {
         </main>
         <MainFooter />
       </div>
+
       <Dialog open={!!selectedAppointment} onOpenChange={(open) => !open && setSelectedAppointment(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -476,8 +460,12 @@ export default function AgendaPage() {
         </DialogContent>
       </Dialog>
 
-      {/* New Appointment Dialog */}
-      <NewAppointmentDialog open={showNewAppointment} onOpenChange={setShowNewAppointment} selectedDate={currentDate} />
+      <NewAppointmentDialog
+        open={showNewAppointment}
+        onOpenChange={setShowNewAppointment}
+        selectedDate={currentDate}
+        onAppointmentCreated={refetchAppointments}
+      />
     </div>
   )
 }

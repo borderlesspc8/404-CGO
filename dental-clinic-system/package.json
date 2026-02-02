@@ -8,7 +8,8 @@
     "lint": "eslint .",
     "start": "next start",
     "postinstall": "echo 'Dependencies installed successfully'",
-    "seed:users": "node scripts/seed-users-firebase.js"
+    "seed:users": "node scripts/seed-users-firebase.js",
+    "seed:appointments": "node scripts/seed-appointments-firebase.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
