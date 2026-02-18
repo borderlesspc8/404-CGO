@@ -149,6 +149,36 @@ export const ecommerceProducts: Product[] = [
     supplier: "Supermax",
     minQuantity: 50,
   },
+  {
+    id: "prod-013",
+    name: "Moldeira de Clareamento",
+    category: "Clareamento",
+    price: 15.0,
+    stock: 150,
+    description: "Moldeira customizável para clareamento dental",
+    supplier: "Clonage",
+    minQuantity: 20,
+  },
+  {
+    id: "prod-014",
+    name: "Bandeja de Clareamento",
+    category: "Clareamento",
+    price: 12.5,
+    stock: 200,
+    description: "Bandeja intrabucal para aplicação de gel clareador",
+    supplier: "Clonage",
+    minQuantity: 25,
+  },
+  {
+    id: "prod-015",
+    name: "Coroa Protética Temporária",
+    category: "Prótese",
+    price: 65.0,
+    stock: 85,
+    description: "Coroa protética temporária em resina",
+    supplier: "Titanium",
+    minQuantity: 10,
+  },
 ]
 
 // Mapeamento de propagandas para produtos recomendados

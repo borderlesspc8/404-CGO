@@ -28,6 +28,7 @@ import {
   Download,
 } from "lucide-react"
 import { InventoryItem, initialInventory } from "@/lib/inventory-data"
+import { RecommendedCart } from "@/components/recommended-cart"
 
 export default function EstoquePage() {
   const router = useRouter()
@@ -55,6 +56,7 @@ export default function EstoquePage() {
   }, [searchTerm, inventory])
 
   const lowStockItems = inventory.filter((item) => item.quantity < item.minStock)
+  const criticalItems = inventory.filter((item) => item.quantity <= 2)
   const outOfStockItems = inventory.filter((item) => item.quantity <= 2)
   const totalValue = inventory.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
 
@@ -80,6 +82,13 @@ export default function EstoquePage() {
             Adicionar Item
           </Button>
         </div>
+
+        {/* Carrinho Recomendado */}
+        {criticalItems.length > 0 && (
+          <div className="mb-6">
+            <RecommendedCart criticalItems={criticalItems} />
+          </div>
+        )}
 
         {/* Resumo Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
