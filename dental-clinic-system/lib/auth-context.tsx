@@ -42,6 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userWithoutPassword = { ...foundUser, password: "" }
       setUser(userWithoutPassword)
       localStorage.setItem("dental-user", JSON.stringify(userWithoutPassword))
+      // Limpa a flag do vídeo para que seja exibido novamente neste login
+      sessionStorage.removeItem("introVideoShown")
       return true
     }
 
@@ -51,6 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null)
     localStorage.removeItem("dental-user")
+    // Limpa a flag do vídeo para que seja exibido no próximo login
+    sessionStorage.removeItem("introVideoShown")
   }
 
   return (

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MainFooter } from "@/components/main-footer";
 import { MainHeader } from "@/components/main-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,11 +30,34 @@ interface PersonalizedAd {
 
 export default function PropagandasPage() {
 	// Splash de vídeo
-	const [showVideo, setShowVideo] = useState(true);
-	// Esconde o vídeo após 8 segundos
-	React.useEffect(() => {
+	const videoRef = useRef<HTMLVideoElement>(null);
+	const [showVideo, setShowVideo] = useState(() => {
+		if (typeof window !== 'undefined') {
+			const videoShown = sessionStorage.getItem('introVideoShown');
+			return videoShown !== 'true';
+		}
+		return false;
+	});
+	const [fadeOut, setFadeOut] = useState(false);
+
+	// Define a velocidade do vídeo como 1.5x quando carrega
+	useEffect(() => {
+		if (videoRef.current && showVideo) {
+			videoRef.current.playbackRate = 1.5;
+		}
+	}, [showVideo]);
+
+	// Esconde o vídeo após exibição
+	useEffect(() => {
 		if (showVideo) {
-			const timer = setTimeout(() => setShowVideo(false), 8000);
+			// Marca que o vídeo foi exibido nesta sessão
+			sessionStorage.setItem('introVideoShown', 'true');
+			
+			// Ajusta o tempo considerando a velocidade de 1.5x (aproximadamente 5.3 segundos)
+			const timer = setTimeout(() => {
+				setFadeOut(true);
+				setTimeout(() => setShowVideo(false), 1000);
+			}, 5300);
 			return () => clearTimeout(timer);
 		}
 	}, [showVideo]);
@@ -195,13 +218,19 @@ export default function PropagandasPage() {
 					display: 'flex',
 					alignItems: 'center',
 					justifyContent: 'center',
+					opacity: fadeOut ? 0 : 1,
+					transition: 'opacity 1s ease-out',
 				}}>
 					<video
+						ref={videoRef}
 						src="/intro.mp4"
 						autoPlay
 						muted
 						style={{ maxWidth: '100vw', maxHeight: '100vh' }}
-						onEnded={() => setShowVideo(false)}
+						onEnded={() => {
+							setFadeOut(true);
+							setTimeout(() => setShowVideo(false), 1000);
+						}}
 					/>
 				</div>
 			)}
@@ -209,12 +238,12 @@ export default function PropagandasPage() {
 				<MainHeader />
 				<main className="flex-1 container mx-auto py-6 px-4">
 				<div className="flex justify-between items-center mb-6">
-					<h1 className="text-3xl font-bold">Propagandas Personalizadas</h1>
+					<h1 className="text-3xl font-bold">Descontos Personalizados</h1>
 				</div>
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 					<Card>
 						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-							<CardTitle className="text-sm font-medium">Total de Propagandas</CardTitle>
+							<CardTitle className="text-sm font-medium">Total de Descontos</CardTitle>
 							<Lightbulb className="h-4 w-4 text-blue-500" />
 						</CardHeader>
 						<CardContent>
@@ -245,7 +274,7 @@ export default function PropagandasPage() {
 				</div>
 				<Tabs defaultValue="recomendacoes" className="w-full">
 					<TabsList className="grid w-full grid-cols-3">
-						<TabsTrigger value="recomendacoes">Propagandas Personalizadas</TabsTrigger>
+						<TabsTrigger value="recomendacoes">Descontos Personalizados</TabsTrigger>
 						<TabsTrigger value="analise">Análise de Estoque</TabsTrigger>
 						<TabsTrigger value="oportunidades">Oportunidades</TabsTrigger>
 					</TabsList>
@@ -260,7 +289,7 @@ export default function PropagandasPage() {
 						)}
 						{mediumPriorityAds.length > 0 && (
 							<div>
-								<h3 className="text-lg font-semibold mb-3 text-yellow-900">📢 Propagandas Secundárias</h3>
+								<h3 className="text-lg font-semibold mb-3 text-yellow-900">📢 Descontos Secundários</h3>
 								<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 									{mediumPriorityAds.map((ad) => (<AdCard key={ad.id} ad={ad} />))}
 								</div>

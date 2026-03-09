@@ -33,6 +33,11 @@ export function NewAppointmentDialog({
 }: NewAppointmentDialogProps) {
   const { user } = useAuth()
   const [patientId, setPatientId] = useState("")
+  const [patientName, setPatientName] = useState("")
+  const [patientEmail, setPatientEmail] = useState("")
+  const [patientPhone, setPatientPhone] = useState("")
+  const [isNewPatient, setIsNewPatient] = useState(false)
+  const [filteredPatients, setFilteredPatients] = useState(mockPatients)
   const [professionalId, setProfessionalId] = useState(selectedProfessionalId || "")
   const toDateStr = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
@@ -51,17 +56,47 @@ export function NewAppointmentDialog({
     }
   }, [open, selectedDate, selectedProfessionalId, selectedTime])
 
+  const handlePatientNameChange = (value: string) => {
+    setPatientName(value)
+    setPatientId("")
+    
+    if (value.trim() === "") {
+      setFilteredPatients(mockPatients)
+      setIsNewPatient(false)
+    } else {
+      const matches = mockPatients.filter(
+        (p) => `${p.name} ${p.lastName}`.toLowerCase().includes(value.toLowerCase())
+      )
+      setFilteredPatients(matches)
+      setIsNewPatient(matches.length === 0)
+    }
+  }
+
+  const handleSelectPatient = (patient: typeof mockPatients[0]) => {
+    setPatientId(patient.id)
+    setPatientName(`${patient.name} ${patient.lastName}`)
+    setPatientEmail(patient.email || "")
+    setPatientPhone(patient.phone || "")
+    setIsNewPatient(false)
+    setFilteredPatients(mockPatients)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!patientId || !professionalId || !date || !startTime || !endTime || !type) {
+    
+    // Validate required fields
+    if (!patientName.trim() || !professionalId || !date || !startTime || !endTime || !type) {
       toast({ title: "Erro", description: "Preencha todos os campos obrigatórios.", variant: "destructive" })
       return
     }
 
+    // If new patient, we'll use the name and email as the patient ID temp
+    const finalPatientId = patientId || `new_${Date.now()}`
+
     setSaving(true)
     try {
       await createAppointment({
-        patientId,
+        patientId: finalPatientId,
         professionalId,
         date,
         startTime,
@@ -73,6 +108,10 @@ export function NewAppointmentDialog({
       toast({ title: "Sucesso", description: "Agendamento criado com sucesso!" })
       onOpenChange(false)
       setPatientId("")
+      setPatientName("")
+      setPatientEmail("")
+      setPatientPhone("")
+      setIsNewPatient(false)
       setProfessionalId(selectedProfessionalId || "")
       setDate(selectedDate ? toDateStr(selectedDate) : "")
       setStartTime(selectedTime || "")
@@ -104,18 +143,73 @@ export function NewAppointmentDialog({
               <Label htmlFor="patient" className="text-[#50348F] font-semibold">
                 Paciente
               </Label>
-              <Select value={patientId} onValueChange={setPatientId}>
-                <SelectTrigger id="patient" className="border-[#50348F]/30">
-                  <SelectValue placeholder="Selecione o paciente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockPatients.map((patient) => (
-                    <SelectItem key={patient.id} value={patient.id}>
-                      {patient.name} {patient.lastName} ({patient.id})
-                    </SelectItem>
+              <Input
+                id="patient"
+                type="text"
+                value={patientName}
+                onChange={(e) => handlePatientNameChange(e.target.value)}
+                placeholder="Digite o nome do paciente"
+                className="border-[#50348F]/30"
+                autoComplete="off"
+              />
+              {patientName && filteredPatients.length > 0 && (
+                <div className="border border-[#50348F]/30 rounded-md max-h-48 overflow-y-auto bg-white">
+                  {filteredPatients.map((patient) => (
+                    <button
+                      key={patient.id}
+                      type="button"
+                      onClick={() => handleSelectPatient(patient)}
+                      className="w-full text-left px-3 py-2 hover:bg-[#50348F]/5 border-b border-[#50348F]/10 last:border-b-0"
+                    >
+                      <div className="font-medium text-sm">{patient.name} {patient.lastName}</div>
+                      <div className="text-xs text-gray-500">{patient.email}</div>
+                    </button>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              )}
+              {isNewPatient && (
+                <div className="rounded-md bg-blue-50 p-2">
+                  <p className="text-xs text-blue-700">
+                    ✓ Novo paciente será cadastrado com este nome
+                  </p>
+                  {patientEmail && (
+                    <Input
+                      type="email"
+                      value={patientEmail}
+                      onChange={(e) => setPatientEmail(e.target.value)}
+                      placeholder="Email (opcional)"
+                      className="border-[#50348F]/30 mt-2 text-xs"
+                    />
+                  )}
+                  {patientPhone && (
+                    <Input
+                      type="tel"
+                      value={patientPhone}
+                      onChange={(e) => setPatientPhone(e.target.value)}
+                      placeholder="Telefone (opcional)"
+                      className="border-[#50348F]/30 mt-2 text-xs"
+                    />
+                  )}
+                  {!patientEmail && (
+                    <Input
+                      type="email"
+                      value={patientEmail}
+                      onChange={(e) => setPatientEmail(e.target.value)}
+                      placeholder="Email (opcional)"
+                      className="border-[#50348F]/30 mt-2 text-xs"
+                    />
+                  )}
+                  {!patientPhone && (
+                    <Input
+                      type="tel"
+                      value={patientPhone}
+                      onChange={(e) => setPatientPhone(e.target.value)}
+                      placeholder="Telefone (opcional)"
+                      className="border-[#50348F]/30 mt-2 text-xs"
+                    />
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { MainHeader } from "@/components/main-header"
@@ -35,7 +35,16 @@ function ModuleCard({ title, description, href, color = "#50348F" }: ModuleCardP
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
-  const [showVideo, setShowVideo] = useState(true)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  
+  // Verifica se o vídeo já foi exibido nesta sessão de login
+  const [showVideo, setShowVideo] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const videoShown = sessionStorage.getItem('introVideoShown')
+      return videoShown !== 'true'
+    }
+    return false
+  })
   const [fadeOut, setFadeOut] = useState(false)
 
   useEffect(() => {
@@ -44,12 +53,23 @@ export default function DashboardPage() {
     }
   }, [isLoading, isAuthenticated, router])
 
+  // Define a velocidade do vídeo como 1.5x quando carrega
+  useEffect(() => {
+    if (videoRef.current && showVideo) {
+      videoRef.current.playbackRate = 1.5
+    }
+  }, [showVideo])
+
   useEffect(() => {
     if (showVideo) {
+      // Marca que o vídeo foi exibido nesta sessão
+      sessionStorage.setItem('introVideoShown', 'true')
+      
+      // Ajusta o tempo considerando a velocidade de 1.5x (aproximadamente 5.3 segundos)
       const timer = setTimeout(() => {
         setFadeOut(true)
         setTimeout(() => setShowVideo(false), 1000)
-      }, 8000)
+      }, 5300)
       return () => clearTimeout(timer)
     }
   }, [showVideo])
@@ -78,8 +98,13 @@ export default function DashboardPage() {
           }}
         >
           <video
+            ref={videoRef}
             src="/intro.mp4"
             autoPlay
+            onEnded={() => {
+              setFadeOut(true)
+              setTimeout(() => setShowVideo(false), 1000)
+            }}
             style={{ maxWidth: '100vw', maxHeight: '100vh' }}
           />
         </div>

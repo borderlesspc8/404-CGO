@@ -26,9 +26,15 @@ import {
   Plus,
   Search,
   Download,
+  Heart,
+  ShoppingCart,
+  Trash2,
 } from "lucide-react"
 import { InventoryItem, initialInventory } from "@/lib/inventory-data"
 import { RecommendedCart } from "@/components/recommended-cart"
+import { useFavorites } from "@/components/favorites-context"
+import { useShoppingCart } from "@/components/shopping-cart-context"
+import { ecommerceProducts } from "@/lib/ecommerce-data"
 
 export default function EstoquePage() {
   const router = useRouter()
@@ -38,8 +44,12 @@ export default function EstoquePage() {
   const [filteredInventory, setFilteredInventory] = useState<InventoryItem[]>(
     initialInventory
   )
+  const { favorites, removeFavorite } = useFavorites()
+  const { addItem } = useShoppingCart()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     if (!isLoading && !user) {
       router.push("/")
     }
@@ -180,10 +190,15 @@ export default function EstoquePage() {
 
         {/* Tabs */}
         <Tabs defaultValue="todos" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="todos">Todos os Itens</TabsTrigger>
             <TabsTrigger value="baixo">Estoque Baixo</TabsTrigger>
             <TabsTrigger value="categorias">Por Categoria</TabsTrigger>
+            <TabsTrigger value="descontos">Descontos</TabsTrigger>
+            <TabsTrigger value="favoritos">
+              <Heart className="w-4 h-4 mr-2" />
+              Favoritos
+            </TabsTrigger>
           </TabsList>
 
           {/* Tab: Todos */}
@@ -414,6 +429,172 @@ export default function EstoquePage() {
                   </Card>
                 )
               }
+            )}
+          </TabsContent>
+
+          {/* Tab: Descontos */}
+          <TabsContent value="descontos" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Banner 1 - Desconto Especial em Implantes */}
+              <Card className="border-red-300 bg-gradient-to-br from-red-50 to-red-100">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-red-900">
+                    <TrendingDown className="h-5 w-5" />
+                    Desconto Especial em Implantes!
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-red-800 mb-4">
+                    Aproveite até 30% de desconto em implantes dentários. Faltam apenas alguns materiais no estoque!
+                  </p>
+                  <div className="flex gap-2 mb-4">
+                    <Badge variant="destructive">URGENTE</Badge>
+                    <Badge className="bg-red-600">Parafuso</Badge>
+                    <Badge className="bg-red-600">Capa provisória</Badge>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button className="flex-1 bg-red-600 hover:bg-red-700">
+                      Ver Produtos
+                    </Button>
+                    <Button variant="outline" onClick={() => router.push("/propagandas")}>
+                      Mais Detalhes
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Banner 2 - Promoção Clareamento */}
+              <Card className="border-yellow-300 bg-gradient-to-br from-yellow-50 to-yellow-100">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-yellow-900">
+                    <TrendingDown className="h-5 w-5" />
+                    Promoção Clareamento Dental!
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-yellow-800 mb-4">
+                    Estoque completo! Aproveite 20% de desconto em produtos para clareamento.
+                  </p>
+                  <div className="flex gap-2 mb-4">
+                    <Badge className="bg-yellow-600">IMPORTANTE</Badge>
+                    <Badge className="bg-green-600">Estoque OK</Badge>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button className="flex-1 bg-yellow-600 hover:bg-yellow-700">
+                      Ver Produtos
+                    </Button>
+                    <Button variant="outline" onClick={() => router.push("/propagandas")}>
+                      Mais Detalhes
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="bg-gradient-to-r from-[#50348F] to-[#B8AF39] text-white">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold mb-2">Quer personalizar seus descontos?</h3>
+                    <p className="text-sm opacity-90">
+                      Crie ofertas personalizadas para seus pacientes baseado no histórico e necessidades
+                    </p>
+                  </div>
+                  <Button 
+                    size="lg" 
+                    variant="secondary"
+                    onClick={() => router.push("/propagandas")}
+                  >
+                    Acessar Descontos
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Favoritos */}
+          <TabsContent value="favoritos" className="space-y-4">
+            {mounted && favorites.length === 0 ? (
+              <Card>
+                <CardContent className="pt-6 text-center py-12">
+                  <Heart className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Nenhum produto favorito</h3>
+                  <p className="text-gray-600 mb-4">
+                    Adicione produtos aos favoritos no E-commerce para acompanhá-los aqui
+                  </p>
+                  <Button onClick={() => router.push("/ecommerce")}>
+                    Ir para E-commerce
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {mounted && favorites.map((fav) => {
+                  const product = ecommerceProducts.find((p) => p.id === fav.productId)
+                  if (!product) return null
+
+                  return (
+                    <Card key={fav.productId} className="overflow-hidden">
+                      <div className="relative">
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-48 object-cover"
+                        />
+                        {product.discount > 0 && (
+                          <Badge className="absolute top-2 right-2 bg-red-600">
+                            -{product.discount}%
+                          </Badge>
+                        )}
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="absolute top-2 left-2"
+                          onClick={() => removeFavorite(product.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </div>
+                      <CardHeader>
+                        <CardTitle className="text-base">{product.name}</CardTitle>
+                        <Badge variant="outline">{product.category}</Badge>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            {product.discount > 0 && (
+                              <p className="text-sm text-gray-500 line-through">
+                                {formatCurrency(product.price)}
+                              </p>
+                            )}
+                            <p className="text-xl font-bold text-[#50348F]">
+                              {formatCurrency(product.discount > 0 
+                                ? product.price * (1 - product.discount / 100)
+                                : product.price)}
+                            </p>
+                          </div>
+                          {product.inStock ? (
+                            <Badge className="bg-green-600">Em Estoque</Badge>
+                          ) : (
+                            <Badge variant="destructive">Indisponível</Badge>
+                          )}
+                        </div>
+                        <Button 
+                          className="w-full gap-2"
+                          onClick={() => {
+                            addItem(product, 1)
+                            router.push("/carrinho")
+                          }}
+                          disabled={!product.inStock}
+                        >
+                          <ShoppingCart className="h-4 w-4" />
+                          Adicionar ao Carrinho
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
             )}
           </TabsContent>
         </Tabs>

@@ -29,6 +29,7 @@ export default function AgendaPage() {
   const [selectedAppointment, setSelectedAppointment] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<"day" | "week">("week")
   const [showNewAppointment, setShowNewAppointment] = useState(false)
+    const [newAppointmentData, setNewAppointmentData] = useState<{ date?: Date; time?: string; professionalId?: string }>({})
   const [waitingList, setWaitingList] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState("calendar")
   const [calendarOpen, setCalendarOpen] = useState(false)
@@ -85,9 +86,9 @@ export default function AgendaPage() {
   const filteredProfessionals = mockProfessionals.filter((prof) => selectedProfessionals.includes(prof.id))
 
   const timeSlots: string[] = []
-  for (let hour = 10; hour <= 15; hour++) {
+  for (let hour = 7; hour <= 20; hour++) {
     timeSlots.push(`${hour.toString().padStart(2, "0")}:00`)
-    if (hour < 15) {
+    if (hour < 20) {
       timeSlots.push(`${hour.toString().padStart(2, "0")}:15`)
       timeSlots.push(`${hour.toString().padStart(2, "0")}:30`)
       timeSlots.push(`${hour.toString().padStart(2, "0")}:45`)
@@ -320,8 +321,16 @@ export default function AgendaPage() {
                             return (
                               <div
                                 key={professional.id}
-                                className="border-r border-gray-300 min-h-[60px] min-w-0 relative"
+                                className="border-r border-gray-300 min-h-[60px] min-w-0 relative cursor-pointer hover:bg-opacity-20 hover:bg-blue-400 transition-colors"
                                 style={{ backgroundColor: `${professional.color}05` }}
+                                onClick={() => {
+                                  setShowNewAppointment(true)
+                                  setNewAppointmentData({
+                                    date: datesToShow.length === 1 ? datesToShow[0] : new Date(),
+                                    time: time,
+                                    professionalId: professional.id
+                                  })
+                                }}
                               >
                                 {appointmentsHere.map((apt) => {
                                   const patient = mockPatients.find((p) => p.id === apt.patientId)
@@ -464,6 +473,9 @@ export default function AgendaPage() {
         open={showNewAppointment}
         onOpenChange={setShowNewAppointment}
         selectedDate={currentDate}
+          selectedDate={newAppointmentData.date || currentDate}
+          selectedTime={newAppointmentData.time}
+          selectedProfessionalId={newAppointmentData.professionalId}
         onAppointmentCreated={refetchAppointments}
       />
     </div>

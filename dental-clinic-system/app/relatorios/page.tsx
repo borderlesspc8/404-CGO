@@ -11,34 +11,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Plus, TrendingUp, DollarSign, Target, CheckCircle, LayoutGrid, LayoutList } from "lucide-react"
+import { TrendingUp, DollarSign, Target, CheckCircle } from "lucide-react"
 import {
   ReportsFilter,
   FilterState,
 } from "@/components/reports-filter"
-import {
-  ReportsTable,
-  SalesOpportunity,
-} from "@/components/reports-table"
-import { ReportsActions } from "@/components/reports-actions"
-import { OpportunityDetails } from "@/components/opportunity-details"
+import { SalesOpportunity } from "@/components/reports-table"
 import { ReportCharts } from "@/components/report-charts"
 import { SalesAnalytics } from "@/components/sales-analytics"
-import { EditOpportunityDialog } from "@/components/edit-opportunity-dialog"
-import { SalesPipelineKanban } from "@/components/sales-pipeline-kanban"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { toast } from "@/components/ui/use-toast"
 
 // Mock data com oportunidades de venda
@@ -370,10 +350,6 @@ export default function RelatoriosPage() {
         {/* Título da página */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Relatórios de Oportunidades</h1>
-          <Button onClick={() => setNewOpportunityOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Nova Oportunidade
-          </Button>
         </div>
 
         {/* Cards de resumo */}
@@ -455,207 +431,7 @@ export default function RelatoriosPage() {
         {/* Gráficos */}
         <ReportCharts data={filteredData} />
 
-        {/* Ações e Modo de Visualização */}
-        <div className="flex items-center justify-between mb-4">
-          <ReportsActions data={opportunities} filteredData={filteredData} filters={filters} />
-          
-          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="w-auto">
-            <TabsList>
-              <TabsTrigger value="table" className="gap-2">
-                <LayoutList className="h-4 w-4" />
-                Tabela
-              </TabsTrigger>
-              <TabsTrigger value="kanban" className="gap-2">
-                <LayoutGrid className="h-4 w-4" />
-                Pipeline
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
-        {/* Tabela ou Kanban */}
-        {viewMode === "table" ? (
-          <div id="reports-table-print">
-            <ReportsTable
-              data={filteredData}
-              onView={handleViewOpportunity}
-              onEdit={handleEditOpportunity}
-              onDelete={handleDeleteOpportunity}
-            />
-          </div>
-        ) : (
-          <SalesPipelineKanban
-            opportunities={filteredData}
-            onViewDetails={handleViewOpportunity}
-            onEdit={handleEditOpportunity}
-            onMoveStage={handleMoveStage}
-          />
-        )}
       </main>
-
-      {/* Dialog de detalhes */}
-      <OpportunityDetails
-        open={detailsOpen}
-        onOpenChange={setDetailsOpen}
-        opportunity={selectedOpportunity}
-      />
-
-      {/* Dialog de edição */}
-      <EditOpportunityDialog
-        open={editOpportunityOpen}
-        onOpenChange={setEditOpportunityOpen}
-        opportunity={editingOpportunity}
-        onSave={handleSaveOpportunity}
-      />
-
-      {/* Dialog de nova oportunidade */}
-      <Dialog open={newOpportunityOpen} onOpenChange={setNewOpportunityOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Adicionar Nova Oportunidade</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="patient">Paciente *</Label>
-                <Input
-                  id="patient"
-                  value={formData.patient}
-                  onChange={(e) =>
-                    setFormData({ ...formData, patient: e.target.value })
-                  }
-                  placeholder="Nome do paciente"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  placeholder="email@exemplo.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  placeholder="(11) 9xxxx-xxxx"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="type">Tipo de Serviço</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, type: value })
-                  }
-                >
-                  <SelectTrigger id="type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tratamento">Tratamento</SelectItem>
-                    <SelectItem value="limpeza">Limpeza</SelectItem>
-                    <SelectItem value="implante">Implante</SelectItem>
-                    <SelectItem value="clareamento">Clareamento</SelectItem>
-                    <SelectItem value="ortodoncia">Ortodontia</SelectItem>
-                    <SelectItem value="periodontia">Periodontia</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Descreva a oportunidade"
-                rows={3}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="value">Valor *</Label>
-                <Input
-                  id="value"
-                  type="number"
-                  value={formData.value}
-                  onChange={(e) =>
-                    setFormData({ ...formData, value: e.target.value })
-                  }
-                  placeholder="0.00"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="probability">Probabilidade (%)</Label>
-                <Input
-                  id="probability"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={formData.probability}
-                  onChange={(e) =>
-                    setFormData({ ...formData, probability: e.target.value })
-                  }
-                  placeholder="50"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="nextAction">Próxima Ação</Label>
-                <Input
-                  id="nextAction"
-                  value={formData.nextAction}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nextAction: e.target.value })
-                  }
-                  placeholder="Descrição da ação"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="nextActionDate">Data da Próxima Ação</Label>
-                <Input
-                  id="nextActionDate"
-                  type="date"
-                  value={formData.nextActionDate}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      nextActionDate: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setNewOpportunityOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleAddOpportunity}>Adicionar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <MainFooter />
 
