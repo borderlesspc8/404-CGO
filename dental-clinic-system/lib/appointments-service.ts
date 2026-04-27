@@ -7,11 +7,15 @@ import {
   doc,
   addDoc,
   getDocs,
+  updateDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
   serverTimestamp,
+  onSnapshot,
   type DocumentData,
+  type Unsubscribe,
 } from "firebase/firestore"
 import { getDb } from "@/lib/firebase"
 
@@ -30,7 +34,7 @@ export interface Appointment {
   createdAt: string
 }
 
-const APPOINTMENTS_COLLECTION = "appointments"
+const COL = "appointments"
 
 function fromFirestore(docData: DocumentData, id: string): Appointment {
   const data = docData as Record<string, unknown>
@@ -59,11 +63,7 @@ function fromFirestore(docData: DocumentData, id: string): Appointment {
 export async function getAppointments(): Promise<Appointment[]> {
   const db = getDb()
   if (!db) return []
-
-  const snap = await getDocs(
-    query(collection(db, APPOINTMENTS_COLLECTION), orderBy("date")),
-  )
-
+  const snap = await getDocs(query(collection(db, COL), orderBy("date")))
   return snap.docs.map((d) => fromFirestore(d.data(), d.id))
 }
 
@@ -73,16 +73,14 @@ export async function getAppointmentsByDateRange(
 ): Promise<Appointment[]> {
   const db = getDb()
   if (!db) return []
-
   const snap = await getDocs(
     query(
-      collection(db, APPOINTMENTS_COLLECTION),
+      collection(db, COL),
       where("date", ">=", startDate),
       where("date", "<=", endDate),
       orderBy("date"),
     ),
   )
-
   return snap.docs.map((d) => fromFirestore(d.data(), d.id))
 }
 
@@ -101,12 +99,67 @@ export interface CreateAppointmentInput {
 export async function createAppointment(input: CreateAppointmentInput): Promise<string> {
   const db = getDb()
   if (!db) throw new Error("Firebase não inicializado")
-
-  const docRef = await addDoc(collection(db, APPOINTMENTS_COLLECTION), {
+  const docRef = await addDoc(collection(db, COL), {
     ...input,
     status: input.status ?? "scheduled",
     createdAt: serverTimestamp(),
   })
-
   return docRef.id
+}
+
+export async function updateAppointment(
+  id: string,
+  data: Partial<Omit<Appointment, "id" | "createdAt" | "createdBy">>,
+): Promise<void> {
+  const db = getDb()
+  if (!db) throw new Error("Firebase não inicializado")
+  await updateDoc(doc(db, COL, id), data)
+}
+
+export async function deleteAppointment(id: string): Promise<void> {
+  const db = getDb()
+  if (!db) throw new Error("Firebase não inicializado")
+  await deleteDoc(doc(db, COL, id))
+}
+
+export function subscribeToAppointmentsByDateRange(
+  startDate: string,
+  endDate: string,
+  onData: (appointments: Appointment[]) => void,
+  onError?: (error: Error) => void,
+): Unsubscribe {
+  const db = getDb()
+  if (!db) {
+    onData([])
+    return () => {}
+  }
+  return onSnapshot(
+    query(
+      collection(db, COL),
+      where("date", ">=", startDate),
+      where("date", "<=", endDate),
+      orderBy("date"),
+    ),
+    (snap) => onData(snap.docs.map((d) => fromFirestore(d.data(), d.id))),
+    (err) => onError?.(err),
+  )
+}
+
+export function checkConflict(
+  appointments: Appointment[],
+  professionalId: string,
+  date: string,
+  startTime: string,
+  endTime: string,
+  excludeId?: string,
+): Appointment | null {
+  return (
+    appointments.find((apt) => {
+      if (apt.id === excludeId) return false
+      if (apt.professionalId !== professionalId) return false
+      if (apt.date !== date) return false
+      if (apt.status === "cancelled" || apt.status === "noshow") return false
+      return startTime < apt.endTime && endTime > apt.startTime
+    }) ?? null
+  )
 }
