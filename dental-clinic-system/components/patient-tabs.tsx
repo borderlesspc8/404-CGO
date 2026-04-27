@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { User, ClipboardList, DollarSign, Camera, FileText, CalendarDays, Heart } from "lucide-react"
 
 interface PatientTabsProps {
   cadastroContent: React.ReactNode
@@ -13,6 +14,16 @@ interface PatientTabsProps {
   anamneseContent: React.ReactNode
 }
 
+const tabs = [
+  { value: "cadastro",      label: "Cadastro",       icon: User },
+  { value: "procedimentos", label: "Procedimentos",  icon: ClipboardList },
+  { value: "financeiro",    label: "Financeiro",     icon: DollarSign },
+  { value: "fotos",         label: "Fotos",          icon: Camera },
+  { value: "contratos",     label: "Contratos",      icon: FileText },
+  { value: "agendamentos",  label: "Agendamentos",   icon: CalendarDays },
+  { value: "anamnese",      label: "Anamnese",       icon: Heart },
+]
+
 export function PatientTabs({
   cadastroContent,
   procedimentosContent,
@@ -22,60 +33,39 @@ export function PatientTabs({
   agendamentosContent,
   anamneseContent,
 }: PatientTabsProps) {
+  const contentMap: Record<string, React.ReactNode> = {
+    cadastro: cadastroContent,
+    procedimentos: procedimentosContent,
+    financeiro: financeiroContent,
+    fotos: fotosContent,
+    contratos: contratosContent,
+    agendamentos: agendamentosContent,
+    anamnese: anamneseContent,
+  }
+
   return (
     <Tabs defaultValue="cadastro" className="w-full">
-      <TabsList className="grid w-full grid-cols-7 bg-transparent gap-2">
-        <TabsTrigger
-          value="cadastro"
-          className="bg-[#50348F] text-white data-[state=active]:bg-[#B8AF39] data-[state=active]:text-[#50348F] rounded-full font-semibold"
-        >
-          Cadastro
-        </TabsTrigger>
-        <TabsTrigger
-          value="procedimentos"
-          className="bg-[#50348F] text-white data-[state=active]:bg-[#B8AF39] data-[state=active]:text-[#50348F] rounded-full font-semibold"
-        >
-          Procedimentos
-        </TabsTrigger>
-        <TabsTrigger
-          value="financeiro"
-          className="bg-[#50348F] text-white data-[state=active]:bg-[#B8AF39] data-[state=active]:text-[#50348F] rounded-full font-semibold"
-        >
-          Financeiro
-        </TabsTrigger>
-        <TabsTrigger
-          value="fotos"
-          className="bg-[#50348F] text-white data-[state=active]:bg-[#B8AF39] data-[state=active]:text-[#50348F] rounded-full font-semibold"
-        >
-          Fotos
-        </TabsTrigger>
-        <TabsTrigger
-          value="contratos"
-          className="bg-[#50348F] text-white data-[state=active]:bg-[#B8AF39] data-[state=active]:text-[#50348F] rounded-full font-semibold"
-        >
-          Contratos
-        </TabsTrigger>
-        <TabsTrigger
-          value="agendamentos"
-          className="bg-[#50348F] text-white data-[state=active]:bg-[#B8AF39] data-[state=active]:text-[#50348F] rounded-full font-semibold"
-        >
-          Agendamentos
-        </TabsTrigger>
-        <TabsTrigger
-          value="anamnese"
-          className="bg-[#50348F] text-white data-[state=active]:bg-[#B8AF39] data-[state=active]:text-[#50348F] rounded-full font-semibold"
-        >
-          Anamnese
-        </TabsTrigger>
+      <TabsList className="flex w-full bg-transparent gap-1.5 h-auto flex-wrap">
+        {tabs.map(({ value, label, icon: Icon }) => (
+          <TabsTrigger
+            key={value}
+            value={value}
+            className="flex items-center gap-1.5 bg-[#50348F]/10 text-[#50348F] border border-[#50348F]/20
+              data-[state=active]:bg-[#50348F] data-[state=active]:text-white data-[state=active]:border-[#50348F]
+              data-[state=active]:shadow-sm rounded-lg px-3 py-2 text-sm font-medium transition-all
+              hover:bg-[#50348F]/20"
+          >
+            <Icon className="w-3.5 h-3.5" />
+            {label}
+          </TabsTrigger>
+        ))}
       </TabsList>
 
-      <TabsContent value="cadastro">{cadastroContent}</TabsContent>
-      <TabsContent value="procedimentos">{procedimentosContent}</TabsContent>
-      <TabsContent value="financeiro">{financeiroContent}</TabsContent>
-      <TabsContent value="fotos">{fotosContent}</TabsContent>
-      <TabsContent value="contratos">{contratosContent}</TabsContent>
-      <TabsContent value="agendamentos">{agendamentosContent}</TabsContent>
-      <TabsContent value="anamnese">{anamneseContent}</TabsContent>
+      {tabs.map(({ value }) => (
+        <TabsContent key={value} value={value} className="mt-4">
+          {contentMap[value]}
+        </TabsContent>
+      ))}
     </Tabs>
   )
 }

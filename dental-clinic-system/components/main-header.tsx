@@ -60,13 +60,28 @@ export function MainHeader() {
           />
 
           {/* Logo - transborda sem aumentar header */}
-          <div className="flex items-center ml-16 -my-4">
+          <div className="relative flex items-center -my-4 h-48">
+            {/* Logo original — mantém o roxo do Oris */}
             <Image
               src="/logo-oris.png"
               alt="Oris - Gestão Odontológica"
               width={500}
               height={175}
-              className="h-48 w-auto object-contain drop-shadow-2xl"
+              className="h-48 w-auto object-contain"
+              priority
+            />
+            {/* Camada branca clipada — cobre apenas o subtítulo */}
+            <Image
+              src="/logo-oris.png"
+              alt=""
+              aria-hidden
+              width={500}
+              height={175}
+              className="absolute inset-0 h-48 w-auto object-contain pointer-events-none"
+              style={{
+                filter: "brightness(0) invert(1)",
+                clipPath: "inset(72% 0 0 0)",
+              }}
               priority
             />
           </div>
