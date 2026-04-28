@@ -1,36 +1,57 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter, useParams } from "next/navigation"
+import type React from "react"
+import { useEffect, useMemo, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { MainHeader } from "@/components/main-header"
 import { MainFooter } from "@/components/main-footer"
 import { AppSidebar } from "@/components/app-sidebar"
-import { mockPatients, mockAppointments, mockProfessionals, type Patient } from "@/lib/mock-data"
+import { PatientTabs } from "@/components/patient-tabs"
+import { findStoredPatient, getStoredPatients, saveStoredPatients } from "@/lib/patients-storage"
+import { mockAppointments, mockProfessionals, type Appointment, type Patient } from "@/lib/mock-data"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { PatientTabs } from "@/components/patient-tabs"
+import { Separator } from "@/components/ui/separator"
+import { toast } from "@/components/ui/use-toast"
 import {
   Calendar,
-  Phone,
-  Mail,
-  Printer,
-  Ban,
-  MessageCircle,
-  Plus,
-  AlertTriangle,
-  Eye,
+  Camera,
   ChevronLeft,
-  CheckCircle2,
+  Home,
+  Mail,
+  MessageCircle,
+  Phone,
+  Plus,
+  Printer,
+  Upload,
+  UserRound,
 } from "lucide-react"
+
+const STATUS_LABELS: Record<Appointment["status"], string> = {
+  scheduled: "Agendado",
+  confirmed: "Confirmado",
+  completed: "Atendido",
+  cancelled: "Cancelado",
+  noshow: "Faltou",
+}
+
+const STATUS_STYLES: Record<Appointment["status"], string> = {
+  scheduled: "bg-gray-100 text-gray-700 hover:bg-gray-100",
+  confirmed: "bg-blue-100 text-blue-700 hover:bg-blue-100",
+  completed: "bg-emerald-100 text-emerald-700 hover:bg-emerald-100",
+  cancelled: "bg-red-100 text-red-700 hover:bg-red-100",
+  noshow: "bg-orange-100 text-orange-700 hover:bg-orange-100",
+}
 
 export default function PatientDetailPage() {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const params = useParams()
+  const patientId = params?.id ? String(params.id) : ""
   const [patient, setPatient] = useState<Patient | null>(null)
 
   useEffect(() => {
@@ -38,15 +59,74 @@ export default function PatientDetailPage() {
       router.push("/")
       return
     }
-    const found = mockPatients.find((p) => p.id === params.id)
-    if (found) setPatient(found)
-  }, [isLoading, isAuthenticated, router, params.id])
 
-  if (isLoading || !isAuthenticated || !patient) {
+    if (isAuthenticated && patientId) {
+      setPatient(findStoredPatient(patientId) ?? null)
+    }
+  }, [isLoading, isAuthenticated, router, patientId])
+
+  const patientAppointments = useMemo(
+    () =>
+      patient
+        ? mockAppointments
+            .filter((appointment) => appointment.patientId === patient.id)
+            .sort((a, b) => `${b.date} ${b.startTime}`.localeCompare(`${a.date} ${a.startTime}`))
+        : [],
+    [patient],
+  )
+
+  if (isLoading || !isAuthenticated) {
     return null
   }
 
-  const patientAppointments = mockAppointments.filter((a) => a.patientId === patient.id)
+  if (!patient) {
+    return (
+      <div className="flex h-screen overflow-hidden">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <MainHeader />
+          <main className="flex-1 bg-gray-50 overflow-auto">
+            <div className="max-w-3xl mx-auto px-6 py-12 text-center">
+              <UserRound className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <h1 className="text-xl font-bold text-[#50348F]">Paciente nao encontrado</h1>
+              <Button className="mt-5" variant="outline" onClick={() => router.push("/pacientes")}>
+                Voltar para Pacientes
+              </Button>
+            </div>
+          </main>
+          <MainFooter />
+        </div>
+      </div>
+    )
+  }
+
+  function handleAvatarUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file || !patient) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const avatar = String(reader.result)
+      const nextPatient = { ...patient, avatar }
+      const nextPatients = getStoredPatients().map((item) => (item.id === patient.id ? nextPatient : item))
+      saveStoredPatients(nextPatients)
+      setPatient(nextPatient)
+      toast({ title: "Foto atualizada", description: "O avatar do paciente foi salvo no perfil." })
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const fullName = `${patient.name} ${patient.lastName}`
+  const initials = `${patient.name.charAt(0)}${patient.lastName.charAt(0)}`
+  const addressLine = [
+    patient.address.street,
+    patient.address.number,
+    patient.address.complement,
+    patient.address.neighborhood,
+  ]
+    .filter(Boolean)
+    .join(", ")
+  const cityLine = [patient.address.city, patient.address.state, patient.address.zipCode].filter(Boolean).join(" - ")
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -55,8 +135,6 @@ export default function PatientDetailPage() {
         <MainHeader />
         <main className="flex-1 bg-gray-50 overflow-auto">
           <div className="max-w-7xl mx-auto px-6 py-6">
-
-            {/* Breadcrumb */}
             <button
               onClick={() => router.push("/pacientes")}
               className="flex items-center gap-1.5 text-sm text-[#50348F] hover:text-[#50348F]/70 mb-4 transition-colors"
@@ -65,61 +143,73 @@ export default function PatientDetailPage() {
               Voltar para Pacientes
             </button>
 
-            {/* Patient header card */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 mb-5">
-              <div className="flex items-start justify-between gap-6">
+            <section className="bg-white rounded-xl border border-gray-200 p-6 mb-5">
+              <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+                <div className="flex flex-col sm:flex-row items-start gap-5">
+                  <div className="relative">
+                    <Avatar className="w-24 h-24 border-4 border-[#50348F]/20 shrink-0">
+                      <AvatarImage src={patient.avatar || "/placeholder.svg"} />
+                      <AvatarFallback className="bg-[#50348F]/10 text-[#50348F] text-2xl font-bold">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <Label
+                      htmlFor="patient-avatar"
+                      className="absolute -right-2 -bottom-2 h-9 w-9 rounded-full bg-[#50348F] text-white flex items-center justify-center shadow-md cursor-pointer hover:bg-[#5D40A2]"
+                      title="Atualizar foto"
+                    >
+                      <Camera className="w-4 h-4" />
+                    </Label>
+                    <Input
+                      id="patient-avatar"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+                  </div>
 
-                {/* Avatar + info */}
-                <div className="flex items-start gap-5">
-                  <Avatar className="w-24 h-24 border-4 border-[#50348F]/20 shrink-0">
-                    <AvatarImage src="/placeholder.svg" />
-                    <AvatarFallback className="bg-[#50348F]/10 text-[#50348F] text-2xl font-bold">
-                      {patient.name.charAt(0)}
-                      {patient.lastName.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="space-y-1.5">
+                  <div className="space-y-3 min-w-0">
                     <div className="flex items-center gap-2.5 flex-wrap">
-                      <h1 className="text-xl font-bold text-[#50348F]">
-                        {patient.name.toUpperCase()} {patient.lastName.toUpperCase()}
-                      </h1>
+                      <h1 className="text-xl font-bold text-[#50348F] uppercase">{fullName}</h1>
                       <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 font-medium">
-                        Ativo
+                        {patient.status === "active" ? "Ativo" : "Inativo"}
                       </Badge>
                       <span className="text-sm text-gray-400">#{patient.id}</span>
                     </div>
 
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 pt-1">
+                    <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-600">
                       <span className="flex items-center gap-1.5">
                         <Phone className="w-3.5 h-3.5 text-gray-400" />
-                        {patient.phone || "Não informado"}
+                        {patient.phone || "Nao informado"}
                       </span>
                       <span className="flex items-center gap-1.5">
                         <Mail className="w-3.5 h-3.5 text-gray-400" />
-                        {patient.email}
+                        {patient.email || "Sem e-mail"}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Home className="w-3.5 h-3.5 text-gray-400" />
+                        {cityLine || "Endereco nao informado"}
                       </span>
                     </div>
+
+                    {patient.notes && (
+                      <p className="text-sm text-gray-600 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                        {patient.notes}
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                {/* Action buttons */}
                 <div className="flex items-center gap-2 shrink-0">
                   <Button
                     variant="outline"
                     size="icon"
                     className="text-[#50348F] border-[#50348F]/30 hover:bg-[#50348F]/5"
                     title="Agendar consulta"
+                    onClick={() => router.push("/agenda")}
                   >
                     <Calendar className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="text-red-500 border-red-200 hover:bg-red-50"
-                    title="Bloquear paciente"
-                  >
-                    <Ban className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="outline"
@@ -146,204 +236,71 @@ export default function PatientDetailPage() {
                   </Button>
                 </div>
               </div>
+            </section>
 
-              {/* Quick info strip */}
-              <div className="flex items-center gap-3 mt-5 pt-5 border-t border-gray-100 flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-[#50348F]/30 text-[#50348F] hover:bg-[#50348F]/5 font-medium"
-                >
-                  Consultar CPF
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 font-medium gap-1.5"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Sem restrição SPC/Serasa</span>
-                  <span className="text-xs font-normal text-emerald-600/70">· 15/01/2025</span>
-                </Button>
-
-                <Button
-                  size="sm"
-                  className="bg-[#50348F] hover:bg-[#5D40A2] text-white font-medium gap-1.5"
-                >
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                  Anamnese
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-[#B8AF39] text-[#50348F] hover:bg-[#B8AF39]/10 font-medium"
-                >
-                  Alerta de Retorno
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-200 text-gray-500 hover:bg-gray-50"
-                  title="Visualizar"
-                >
-                  <Eye className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Tabs */}
             <PatientTabs
               cadastroContent={
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="bg-[#50348F] px-6 py-4">
-                    <h2 className="text-lg font-bold text-white">Dados Cadastrais</h2>
-                  </div>
-                  <div className="p-6">
-                    <div className="grid grid-cols-2 gap-5">
-                      <div className="space-y-1.5">
-                        <Label className="text-[#50348F] font-semibold text-sm">Nome</Label>
-                        <Input defaultValue={patient.name} className="border-gray-200 focus-visible:border-[#50348F]" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[#50348F] font-semibold text-sm">Sobrenome</Label>
-                        <Input defaultValue={patient.lastName} className="border-gray-200 focus-visible:border-[#50348F]" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[#50348F] font-semibold text-sm">CPF</Label>
-                        <Input defaultValue={patient.cpf} className="border-gray-200 focus-visible:border-[#50348F]" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[#50348F] font-semibold text-sm">Data de Nascimento</Label>
-                        <Input type="date" defaultValue={patient.birthDate} className="border-gray-200 focus-visible:border-[#50348F]" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[#50348F] font-semibold text-sm">Estado Civil</Label>
-                        <Input defaultValue={patient.civilStatus} className="border-gray-200 focus-visible:border-[#50348F]" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[#50348F] font-semibold text-sm">Sexo</Label>
-                        <Input defaultValue={patient.gender} className="border-gray-200 focus-visible:border-[#50348F]" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[#50348F] font-semibold text-sm">Como Conheceu</Label>
-                        <Input defaultValue={patient.howKnew} className="border-gray-200 focus-visible:border-[#50348F]" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[#50348F] font-semibold text-sm">RG</Label>
-                        <Input defaultValue={patient.rg} className="border-gray-200 focus-visible:border-[#50348F]" />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-center gap-3 mt-8 pt-6 border-t border-gray-100">
-                      <Button className="bg-[#B8AF39] hover:bg-[#F7E70F] text-[#50348F] font-semibold px-6 rounded-full">
-                        Dados Cadastrais
-                      </Button>
-                      <Button variant="outline" className="border-[#50348F]/30 text-[#50348F] font-semibold px-6 rounded-full hover:bg-[#50348F]/5">
-                        Contato
-                      </Button>
-                      <Button variant="outline" className="border-[#50348F]/30 text-[#50348F] font-semibold px-6 rounded-full hover:bg-[#50348F]/5">
-                        Dados Complementares
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              }
-
-              procedimentosContent={
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                   <div className="bg-[#50348F] px-6 py-4 flex items-center justify-between">
                     <div>
-                      <h2 className="text-lg font-bold text-white">Orçamentos</h2>
-                      <p className="text-white/60 text-sm">1 orçamento ativo</p>
+                      <h2 className="text-lg font-bold text-white">Cadastro e Perfil</h2>
+                      <p className="text-white/70 text-sm">Dados pessoais, contato e endereco simplificado</p>
                     </div>
-                    <Button className="bg-[#B8AF39] hover:bg-[#F7E70F] text-[#50348F] font-semibold">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Novo Orçamento
-                    </Button>
+                    <Upload className="w-5 h-5 text-white/80" />
                   </div>
-
-                  <div className="p-6">
-                    {/* Budget card */}
-                    <div className="border border-gray-200 rounded-xl overflow-hidden">
-                      {/* Budget header */}
-                      <div className="bg-[#50348F]/8 border-b border-gray-100 px-5 py-4 flex items-start justify-between gap-4">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">
-                              Aprovado · 15/10/2025
-                            </Badge>
-                          </div>
-                          <h3 className="font-bold text-[#50348F] text-base">Protocolo Cirúrgico Completo</h3>
-                          <p className="text-sm text-gray-500">Dr. Pedro Henrique Ribeiro Mota · Aprovado por Diovana</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-xs text-gray-400 mb-0.5">Total com desconto</p>
-                          <p className="text-2xl font-bold text-[#50348F]">R$12.847,75</p>
-                          <Badge className="bg-red-100 text-red-600 hover:bg-red-100 text-xs mt-1">15% de desconto</Badge>
-                        </div>
-                      </div>
-
-                      {/* Procedures */}
-                      <div className="divide-y divide-gray-100">
-                        <div className="px-5 py-4 flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold text-gray-800 text-sm">Cirurgia Protocolo (1x)</p>
-                            <p className="text-xs text-gray-400 mt-0.5">Oris · Dr. Pedro Henrique Ribeiro Mota</p>
-                          </div>
-                          <p className="font-bold text-[#50348F]">R$3.015,00</p>
-                        </div>
-                        <div className="px-5 py-4 flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold text-gray-800 text-sm">Prótese Protocolo (1x)</p>
-                            <p className="text-xs text-gray-400 mt-0.5">Oris · Dr. Pedro Henrique Ribeiro Mota</p>
-                          </div>
-                          <p className="font-bold text-[#50348F]">R$12.100,00</p>
-                        </div>
-                      </div>
-
-                      {/* Financial summary */}
-                      <div className="bg-gray-50 px-5 py-4 flex items-center justify-between border-t border-gray-100">
-                        <div className="space-y-1 text-sm text-gray-600">
-                          <p><span className="font-semibold">Forma de pagamento:</span> Boleto Parcelado</p>
-                          <p><span className="font-semibold">Parcelas:</span> Entrada + 24x</p>
-                          <p><span className="font-semibold">Tabela:</span> Particular</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-gray-400 mb-0.5">Valor original</p>
-                          <p className="text-sm text-gray-400 line-through">R$15.115,00</p>
-                          <p className="text-xl font-bold text-emerald-600">R$12.847,75</p>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="p-6 space-y-6">
+                    <InfoSection
+                      title="Dados pessoais"
+                      items={[
+                        ["Nome", patient.name],
+                        ["Sobrenome", patient.lastName],
+                        ["CPF", patient.cpf],
+                        ["RG", patient.rg],
+                        ["Data de nascimento", formatDate(patient.birthDate)],
+                        ["Sexo", patient.gender],
+                        ["Estado civil", patient.civilStatus],
+                        ["Como conheceu", patient.howKnew],
+                      ]}
+                    />
+                    <Separator />
+                    <InfoSection
+                      title="Contato e endereco"
+                      items={[
+                        ["Telefone", patient.phone],
+                        ["E-mail", patient.email],
+                        ["Endereco", addressLine],
+                        ["Cidade/UF/CEP", cityLine],
+                      ]}
+                    />
                   </div>
                 </div>
               }
-
-              financeiroContent={
-                <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                  <p className="text-[#50348F] font-medium">Módulo Financeiro em desenvolvimento</p>
-                </div>
-              }
-
+              procedimentosContent={<Placeholder title="Procedimentos" text="Ficha de procedimentos do paciente." />}
+              financeiroContent={<Placeholder title="Financeiro" text="Resumo financeiro do paciente." />}
               fotosContent={
-                <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                  <p className="text-[#50348F] font-medium">Módulo de Fotos em desenvolvimento</p>
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                  <h2 className="text-lg font-bold text-[#50348F] mb-4">Fotos</h2>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="w-24 h-24 border-4 border-[#50348F]/15">
+                      <AvatarImage src={patient.avatar || "/placeholder.svg"} />
+                      <AvatarFallback className="bg-[#50348F]/10 text-[#50348F] text-2xl font-bold">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">Foto de perfil</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Use o botao sobre o avatar do cabecalho para trocar a foto.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               }
-
-              contratosContent={
-                <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                  <p className="text-[#50348F] font-medium">Módulo de Contratos em desenvolvimento</p>
-                </div>
-              }
-
+              contratosContent={<Placeholder title="Contratos" text="Contratos vinculados ao paciente." />}
               agendamentosContent={
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                   <div className="bg-[#50348F] px-6 py-4">
-                    <h2 className="text-lg font-bold text-white">Histórico de Agendamentos</h2>
+                    <h2 className="text-lg font-bold text-white">Historico de Agendamentos</h2>
                   </div>
                   <div className="p-6">
                     {patientAppointments.length === 0 ? (
@@ -359,20 +316,16 @@ export default function PatientDetailPage() {
                             >
                               <div className="flex justify-between items-start gap-4">
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-[#50348F] text-sm">{professional?.name}</p>
+                                  <p className="font-semibold text-[#50348F] text-sm">
+                                    {professional?.name ?? "Profissional nao informado"}
+                                  </p>
                                   <p className="text-sm text-gray-500 mt-0.5">
-                                    {new Date(appointment.date).toLocaleDateString("pt-BR")} · {appointment.startTime} – {appointment.endTime}
+                                    {formatDate(appointment.date)} - {appointment.startTime} ate {appointment.endTime}
                                   </p>
                                   <p className="text-xs text-gray-400 mt-0.5">{appointment.type}</p>
                                 </div>
-                                <Badge
-                                  className={
-                                    appointment.status === "confirmed"
-                                      ? "bg-blue-100 text-blue-700 hover:bg-blue-100 shrink-0"
-                                      : "bg-gray-100 text-gray-600 hover:bg-gray-100 shrink-0"
-                                  }
-                                >
-                                  {appointment.status === "confirmed" ? "Confirmado" : "Agendado"}
+                                <Badge className={`${STATUS_STYLES[appointment.status]} shrink-0`}>
+                                  {STATUS_LABELS[appointment.status]}
                                 </Badge>
                               </div>
                               {appointment.notes && (
@@ -388,12 +341,7 @@ export default function PatientDetailPage() {
                   </div>
                 </div>
               }
-
-              anamneseContent={
-                <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                  <p className="text-[#50348F] font-medium">Módulo de Anamnese em desenvolvimento</p>
-                </div>
-              }
+              anamneseContent={<Placeholder title="Anamnese" text="Anamnese e alertas clinicos do paciente." />}
             />
           </div>
         </main>
@@ -401,4 +349,36 @@ export default function PatientDetailPage() {
       </div>
     </div>
   )
+}
+
+function InfoSection({ title, items }: { title: string; items: [string, string | undefined][] }) {
+  return (
+    <section>
+      <h3 className="text-sm font-bold uppercase tracking-wide text-[#50348F] mb-3">{title}</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {items.map(([label, value]) => (
+          <div key={label} className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 min-w-0">
+            <p className="text-xs font-semibold text-gray-400 mb-1">{label}</p>
+            <p className="text-sm font-medium text-gray-800 truncate">{value || "Nao informado"}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function Placeholder({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+      <h2 className="text-lg font-bold text-[#50348F]">{title}</h2>
+      <p className="text-sm text-gray-500 mt-1">{text}</p>
+    </div>
+  )
+}
+
+function formatDate(value?: string) {
+  if (!value) return ""
+  const [year, month, day] = value.split("-")
+  if (!year || !month || !day) return value
+  return `${day}/${month}/${year}`
 }

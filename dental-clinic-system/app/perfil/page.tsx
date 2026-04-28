@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context"
 import { MainHeader } from "@/components/main-header"
 import { MainFooter } from "@/components/main-footer"
 import { AppSidebar } from "@/components/app-sidebar"
+import { NewAppointmentDialog } from "@/components/new-appointment-dialog"
 import { mockPatients, mockAppointments, mockProfessionals } from "@/lib/mock-data"
 import { AppointmentStatusBadge } from "@/components/appointment-status-badge"
 import { Button } from "@/components/ui/button"
@@ -13,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { toast } from "@/components/ui/use-toast"
 import {
   Phone,
   Mail,
@@ -103,6 +105,8 @@ export default function PerfilPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("cadastro")
   const [editMode, setEditMode] = useState(false)
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false)
+  const [cpfChecked, setCpfChecked] = useState(false)
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) router.push("/")
@@ -118,6 +122,27 @@ export default function PerfilPage() {
   const totalValue = MOCK_PROCEDURES.reduce((s, p) => s + p.value, 0)
   const paidValue = MOCK_PAYMENTS.filter((p) => p.status === "paid").reduce((s, p) => s + p.value, 0)
   const remaining = totalValue - paidValue
+
+  function handleConsultCpf() {
+    setCpfChecked(true)
+    toast({
+      title: "CPF consultado",
+      description: `CPF ${patient.cpf} sem restricoes registradas.`,
+    })
+  }
+
+  function handleReturnAlert() {
+    setActiveTab("agendamentos")
+    toast({
+      title: "Alerta de retorno",
+      description: "Historico de agendamentos aberto para definir o proximo retorno.",
+    })
+  }
+
+  function handleSchedule() {
+    setActiveTab("agendamentos")
+    setShowAppointmentDialog(true)
+  }
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -168,13 +193,15 @@ export default function PerfilPage() {
                     variant="outline"
                     size="sm"
                     className="border-[#50348F]/30 text-[#50348F] text-xs h-8"
+                    onClick={handleConsultCpf}
                   >
-                    Consultar CPF
+                    {cpfChecked ? "CPF consultado" : "Consultar CPF"}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     className="border-yellow-200 bg-yellow-50 text-yellow-800 text-xs h-8"
+                    onClick={handleReturnAlert}
                   >
                     <AlertCircle className="w-3.5 h-3.5 mr-1" />
                     Alerta de retorno
@@ -182,6 +209,7 @@ export default function PerfilPage() {
                   <Button
                     size="sm"
                     className="bg-[#B8AF39] hover:bg-[#F7E70F] text-[#50348F] font-semibold text-xs h-8"
+                    onClick={handleSchedule}
                   >
                     <Plus className="w-3.5 h-3.5 mr-1" />
                     Agendar
@@ -615,6 +643,7 @@ export default function PerfilPage() {
                   <Button
                     size="sm"
                     className="bg-[#B8AF39] hover:bg-[#F7E70F] text-[#50348F] font-semibold text-xs h-8"
+                    onClick={handleSchedule}
                   >
                     <Plus className="w-3.5 h-3.5 mr-1" /> Agendar
                   </Button>
@@ -729,6 +758,21 @@ export default function PerfilPage() {
 
         <MainFooter />
       </div>
+
+      <NewAppointmentDialog
+        open={showAppointmentDialog}
+        onOpenChange={setShowAppointmentDialog}
+        selectedDate={new Date()}
+        defaultPatientId={patient.id}
+        appointmentToEdit={undefined}
+        appointments={mockAppointments}
+        onAppointmentCreated={() => {
+          toast({
+            title: "Agendamento enviado",
+            description: "O novo agendamento foi processado pela agenda.",
+          })
+        }}
+      />
     </div>
   )
 }

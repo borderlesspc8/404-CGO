@@ -19,6 +19,7 @@ interface NewAppointmentDialogProps {
   selectedDate?: Date
   selectedTime?: string
   selectedProfessionalId?: string
+  defaultPatientId?: string
   appointmentToEdit?: Appointment
   appointments?: Appointment[]
   onAppointmentCreated?: () => void
@@ -45,6 +46,7 @@ export function NewAppointmentDialog({
   selectedDate,
   selectedTime,
   selectedProfessionalId,
+  defaultPatientId,
   appointmentToEdit,
   appointments = [],
   onAppointmentCreated,
@@ -87,10 +89,13 @@ export function NewAppointmentDialog({
       setType(appointmentToEdit.type)
       setNotes(appointmentToEdit.notes ?? "")
     } else {
-      setPatientId("")
-      setPatientName("")
-      setPatientEmail("")
-      setPatientPhone("")
+      const defaultPatient = defaultPatientId
+        ? mockPatients.find((p) => p.id === defaultPatientId)
+        : undefined
+      setPatientId(defaultPatient?.id ?? "")
+      setPatientName(defaultPatient ? `${defaultPatient.name} ${defaultPatient.lastName}` : "")
+      setPatientEmail(defaultPatient?.email ?? "")
+      setPatientPhone(defaultPatient?.phone ?? "")
       setIsNewPatient(false)
       setProfessionalId(selectedProfessionalId ?? "")
       setDate(selectedDate ? toDateStr(selectedDate) : "")
@@ -101,7 +106,7 @@ export function NewAppointmentDialog({
     }
     setShowSuggestions(false)
     setFilteredPatients(mockPatients)
-  }, [open, isEditMode, appointmentToEdit, selectedDate, selectedProfessionalId, selectedTime])
+  }, [open, isEditMode, appointmentToEdit, defaultPatientId, selectedDate, selectedProfessionalId, selectedTime])
 
   const handlePatientNameChange = (value: string) => {
     setPatientName(value)
