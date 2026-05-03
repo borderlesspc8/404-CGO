@@ -303,11 +303,105 @@ export default function PropagandasPage() {
 							</Card>
 						)}
 					</TabsContent>
-					<TabsContent value="analise">
-						<div className="p-4 text-center text-muted-foreground">Funcionalidade de análise de estoque em desenvolvimento.</div>
+					<TabsContent value="analise" className="space-y-4">
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+							<div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+								<p className="text-2xl font-bold text-red-600">{ads.filter(a => a.missingItems.length > 0).length}</p>
+								<p className="text-sm text-red-700 mt-1">Tratamentos com estoque insuficiente</p>
+							</div>
+							<div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+								<p className="text-2xl font-bold text-green-600">{ads.filter(a => a.missingItems.length === 0).length}</p>
+								<p className="text-sm text-green-700 mt-1">Tratamentos com estoque completo</p>
+							</div>
+							<div className="bg-[#50348F]/5 border border-[#50348F]/20 rounded-lg p-4 text-center">
+								<p className="text-2xl font-bold text-[#50348F]">
+									{formatCurrency(ads.reduce((s, a) => s + (a.missingItems.length > 0 ? a.estimatedValue : 0), 0))}
+								</p>
+								<p className="text-sm text-[#50348F]/70 mt-1">Receita bloqueada por falta de estoque</p>
+							</div>
+						</div>
+						<div className="bg-white rounded-lg border p-4 space-y-3">
+							<h3 className="font-semibold text-gray-700">Materiais em falta por tratamento</h3>
+							{ads.filter(a => a.missingItems.length > 0).length === 0 ? (
+								<p className="text-gray-400 text-sm py-4 text-center">Todos os tratamentos têm estoque completo</p>
+							) : ads.filter(a => a.missingItems.length > 0).map(ad => (
+								<div key={ad.id} className="flex items-start justify-between gap-4 p-3 bg-red-50 rounded-lg border border-red-100">
+									<div>
+										<p className="font-medium text-sm">{ad.serviceType} — {ad.patient}</p>
+										<div className="flex flex-wrap gap-1 mt-1">
+											{ad.missingItems.map((item, i) => (
+												<span key={i} className="text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded-full">{item}</span>
+											))}
+										</div>
+									</div>
+									<span className="text-sm font-bold text-red-600 whitespace-nowrap">{formatCurrency(ad.estimatedValue)}</span>
+								</div>
+							))}
+						</div>
+						<div className="bg-white rounded-lg border p-4">
+							<h3 className="font-semibold text-gray-700 mb-3">Resumo por tipo de serviço</h3>
+							<div className="space-y-2">
+								{Array.from(new Set(ads.map(a => a.serviceType))).map(service => {
+									const serviceAds = ads.filter(a => a.serviceType === service)
+									const withStock = serviceAds.filter(a => a.missingItems.length === 0).length
+									const total = serviceAds.length
+									return (
+										<div key={service} className="flex items-center gap-3">
+											<span className="text-sm w-36 font-medium">{service}</span>
+											<div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+												<div className="h-full bg-green-500 rounded-full" style={{ width: `${(withStock / total) * 100}%` }} />
+											</div>
+											<span className="text-xs text-gray-500 w-20 text-right">{withStock}/{total} prontos</span>
+										</div>
+									)
+								})}
+							</div>
+						</div>
 					</TabsContent>
-					<TabsContent value="oportunidades">
-						<div className="p-4 text-center text-muted-foreground">Funcionalidade de oportunidades em desenvolvimento.</div>
+					<TabsContent value="oportunidades" className="space-y-4">
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+							<div className="bg-[#50348F]/5 border border-[#50348F]/20 rounded-lg p-4 text-center">
+								<p className="text-2xl font-bold text-[#50348F]">{ads.length}</p>
+								<p className="text-sm text-[#50348F]/70 mt-1">Oportunidades identificadas</p>
+							</div>
+							<div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+								<p className="text-2xl font-bold text-green-600">{formatCurrency(ads.reduce((s, a) => s + a.estimatedValue, 0))}</p>
+								<p className="text-sm text-green-700 mt-1">Receita potencial total</p>
+							</div>
+							<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+								<p className="text-2xl font-bold text-yellow-600">{ads.filter(a => a.priority === "alta").length}</p>
+								<p className="text-sm text-yellow-700 mt-1">Oportunidades urgentes</p>
+							</div>
+						</div>
+						<div className="space-y-3">
+							{[...ads].sort((a, b) => b.estimatedValue - a.estimatedValue).map(ad => (
+								<div key={ad.id} className="bg-white rounded-lg border p-4 flex items-center justify-between gap-4">
+									<div className="flex items-center gap-3 min-w-0">
+										<div className={`w-3 h-3 rounded-full shrink-0 ${ad.priority === "alta" ? "bg-red-500" : ad.priority === "média" ? "bg-yellow-500" : "bg-green-500"}`} />
+										<div className="min-w-0">
+											<p className="font-semibold text-sm">{ad.patient}</p>
+											<p className="text-xs text-gray-500">{ad.serviceType} · {ad.currentOffer}</p>
+										</div>
+									</div>
+									<div className="flex items-center gap-4 shrink-0">
+										<div className="text-right">
+											<p className="font-bold text-green-600">{formatCurrency(ad.estimatedValue)}</p>
+											<p className="text-xs text-gray-400">potencial</p>
+										</div>
+										<span className={`text-xs font-bold px-2 py-1 rounded-full ${
+											ad.priority === "alta" ? "bg-red-100 text-red-700" :
+											ad.priority === "média" ? "bg-yellow-100 text-yellow-700" :
+											"bg-green-100 text-green-700"
+										}`}>
+											{ad.priority === "alta" ? "Urgente" : ad.priority === "média" ? "Importante" : "Normal"}
+										</span>
+										<span className={`text-xs px-2 py-1 rounded-full ${ad.missingItems.length > 0 ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"}`}>
+											{ad.missingItems.length > 0 ? `${ad.missingItems.length} item(s) em falta` : "Estoque OK"}
+										</span>
+									</div>
+								</div>
+							))}
+						</div>
 					</TabsContent>
 				</Tabs>
 			</main>

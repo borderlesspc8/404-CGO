@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Profissional, Consulta, sugerirHorarios, verificarConflito } from "../../lib/agenda-inteligente";
+import { Profissional, Consulta, sugerirHorarios, verificarConflito } from "../lib/agenda-inteligente";
 
 const profissionais: Profissional[] = [
   { id: "1", nome: "Dr. Ana", horarios: ["08:00", "09:00", "10:00", "11:00"] },
@@ -47,7 +47,7 @@ const AgendaInteligente: React.FC = () => {
         <label>Horário: </label>
         <select value={horario} onChange={e => setHorario(e.target.value)}>
           <option value="">Selecione</option>
-          {horariosDisponiveis.map(h => (
+          {horariosDisponiveis.map((h: string) => (
             <option key={h} value={h}>{h}</option>
           ))}
         </select>

@@ -33,11 +33,15 @@ export const getFirebaseAnalytics = async (): Promise<Analytics | null> => {
 
 let db: Firestore | null = null
 
+/** Retorna null quando Firebase não está configurado (sem .env.local), ativando o fallback localStorage. */
 export const getDb = (): Firestore | null => {
   if (typeof window === "undefined") return null
+  if (!firebaseConfig.projectId) return null
   if (!db) db = getFirestore(app)
   return db
 }
+
+export const isFirebaseConfigured = (): boolean => !!firebaseConfig.projectId
 
 export { app }
 export default app

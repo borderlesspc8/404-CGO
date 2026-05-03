@@ -42,8 +42,10 @@ export function MainHeader() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    // Search functionality
-    console.log("Searching for:", searchQuery)
+    if (searchQuery.trim()) {
+      router.push(`/busca?q=${encodeURIComponent(searchQuery.trim())}`)
+      setSearchQuery("")
+    }
   }
 
   return (

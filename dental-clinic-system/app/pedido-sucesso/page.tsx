@@ -18,7 +18,7 @@ function PedidoSucessoContent() {
   const { getOrderById } = useOrders()
   const [mounted, setMounted] = useState(false)
 
-  const orderId = searchParams.get("orderId")
+  const orderId = searchParams?.get("orderId")
   const order = orderId ? getOrderById(orderId) : null
 
   useEffect(() => {

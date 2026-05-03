@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { MessageCircle, Eye, EyeOff } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { MessageCircle, Eye, EyeOff, CheckCircle } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -19,6 +20,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [greeting, setGreeting] = useState("Boa Tarde!")
+  const [showForgot, setShowForgot] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState("")
+  const [forgotSent, setForgotSent] = useState(false)
 
   const { login } = useAuth()
   const router = useRouter()
@@ -147,7 +151,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   className="text-[#5b4b8a] text-sm hover:underline"
-                  onClick={() => alert("Funcionalidade em desenvolvimento")}
+                  onClick={() => { setShowForgot(true); setForgotSent(false); setForgotEmail("") }}
                 >
                   Esqueci Minha Senha
                 </button>
@@ -156,6 +160,52 @@ export default function LoginPage() {
           </div>
         </div>
       </main>
+
+      {/* Dialog Esqueci Minha Senha */}
+      <Dialog open={showForgot} onOpenChange={(o) => { setShowForgot(o); if (!o) { setForgotEmail(""); setForgotSent(false) } }}>
+        <DialogContent className="sm:max-w-100">
+          <DialogHeader>
+            <DialogTitle className="text-[#5b4b8a]">Recuperar Senha</DialogTitle>
+          </DialogHeader>
+          {forgotSent ? (
+            <div className="text-center py-6">
+              <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-3" />
+              <p className="font-semibold text-green-700 text-lg">Instruções enviadas!</p>
+              <p className="text-sm text-gray-500 mt-1">Verifique o e-mail <strong>{forgotEmail}</strong></p>
+              <Button className="mt-6 bg-[#5b4b8a] hover:bg-[#4a3a79]" onClick={() => setShowForgot(false)}>
+                Fechar
+              </Button>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-gray-500 pb-2">
+                Informe seu e-mail para receber as instruções de recuperação de senha.
+              </p>
+              <div className="space-y-2">
+                <Label className="text-[#5b4b8a] font-semibold">E-mail</Label>
+                <Input
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && forgotEmail && setForgotSent(true)}
+                  className="border-[#5b4b8a]/20 focus:border-[#5b4b8a]"
+                />
+              </div>
+              <DialogFooter className="pt-2">
+                <Button variant="outline" onClick={() => setShowForgot(false)}>Cancelar</Button>
+                <Button
+                  className="bg-[#5b4b8a] hover:bg-[#4a3a79]"
+                  onClick={() => setForgotSent(true)}
+                  disabled={!forgotEmail.trim()}
+                >
+                  Enviar
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Footer */}
       <footer className="bg-[#c9b888] py-6 px-6">

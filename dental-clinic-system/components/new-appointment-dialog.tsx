@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { mockProfessionals, mockPatients } from "@/lib/mock-data"
+import { mockProfessionals } from "@/lib/mock-data"
+import { getStoredPatients } from "@/lib/patients-storage"
+import type { Patient } from "@/lib/mock-data"
 import { useAuth } from "@/lib/auth-context"
 import { createAppointment, updateAppointment, checkConflict, type Appointment } from "@/lib/appointments-service"
 import { toast } from "@/components/ui/use-toast"
@@ -60,7 +62,8 @@ export function NewAppointmentDialog({
   const [patientPhone, setPatientPhone] = useState("")
   const [isNewPatient, setIsNewPatient] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [filteredPatients, setFilteredPatients] = useState(mockPatients)
+  const [allPatients, setAllPatients] = useState<Patient[]>([])
+  const [filteredPatients, setFilteredPatients] = useState<Patient[]>([])
   const [professionalId, setProfessionalId] = useState("")
   const [date, setDate] = useState("")
   const [startTime, setStartTime] = useState("")
@@ -75,8 +78,12 @@ export function NewAppointmentDialog({
   useEffect(() => {
     if (!open) return
 
+    const patients = getStoredPatients()
+    setAllPatients(patients)
+    setFilteredPatients(patients)
+
     if (isEditMode && appointmentToEdit) {
-      const patient = mockPatients.find((p) => p.id === appointmentToEdit.patientId)
+      const patient = patients.find((p) => p.id === appointmentToEdit.patientId)
       setPatientId(appointmentToEdit.patientId)
       setPatientName(patient ? `${patient.name} ${patient.lastName}` : appointmentToEdit.patientId)
       setPatientEmail(patient?.email ?? "")
@@ -90,7 +97,7 @@ export function NewAppointmentDialog({
       setNotes(appointmentToEdit.notes ?? "")
     } else {
       const defaultPatient = defaultPatientId
-        ? mockPatients.find((p) => p.id === defaultPatientId)
+        ? patients.find((p) => p.id === defaultPatientId)
         : undefined
       setPatientId(defaultPatient?.id ?? "")
       setPatientName(defaultPatient ? `${defaultPatient.name} ${defaultPatient.lastName}` : "")
@@ -105,7 +112,6 @@ export function NewAppointmentDialog({
       setNotes("")
     }
     setShowSuggestions(false)
-    setFilteredPatients(mockPatients)
   }, [open, isEditMode, appointmentToEdit, defaultPatientId, selectedDate, selectedProfessionalId, selectedTime])
 
   const handlePatientNameChange = (value: string) => {
@@ -113,10 +119,10 @@ export function NewAppointmentDialog({
     setPatientId("")
     setShowSuggestions(true)
     if (value.trim() === "") {
-      setFilteredPatients(mockPatients)
+      setFilteredPatients(allPatients)
       setIsNewPatient(false)
     } else {
-      const matches = mockPatients.filter((p) =>
+      const matches = allPatients.filter((p) =>
         `${p.name} ${p.lastName}`.toLowerCase().includes(value.toLowerCase()),
       )
       setFilteredPatients(matches)
@@ -124,7 +130,7 @@ export function NewAppointmentDialog({
     }
   }
 
-  const handleSelectPatient = (patient: (typeof mockPatients)[0]) => {
+  const handleSelectPatient = (patient: Patient) => {
     setPatientId(patient.id)
     setPatientName(`${patient.name} ${patient.lastName}`)
     setPatientEmail(patient.email ?? "")
@@ -157,7 +163,7 @@ export function NewAppointmentDialog({
         appointmentToEdit?.id,
       )
       if (conflict) {
-        const conflictPatient = mockPatients.find((p) => p.id === conflict.patientId)
+        const conflictPatient = allPatients.find((p) => p.id === conflict.patientId)
         const profName = mockProfessionals.find((p) => p.id === professionalId)?.name ?? "Profissional"
         toast({
           title: "Conflito de horário",

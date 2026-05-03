@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { MainHeader } from "@/components/main-header"
 import { AppSidebar } from "@/components/app-sidebar"
 import { AutomationManager, FollowUpScheduler } from "@/components/crm-automation"
@@ -98,9 +98,32 @@ const mockCampaigns: Campaign[] = [
   },
 ]
 
+function loadCRMData<T>(key: string, fallback: T[]): T[] {
+  if (typeof window === "undefined") return fallback
+  try {
+    const raw = window.localStorage.getItem(key)
+    if (!raw) return fallback
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : fallback
+  } catch { return fallback }
+}
+
 export default function CRMPage() {
   const [leads, setLeads] = useState<Lead[]>(mockLeads)
   const [campaigns, setCampaigns] = useState<Campaign[]>(mockCampaigns)
+
+  useEffect(() => {
+    setLeads(loadCRMData("cgo.crm.leads", mockLeads))
+    setCampaigns(loadCRMData("cgo.crm.campaigns", mockCampaigns))
+  }, [])
+
+  useEffect(() => {
+    if (typeof window !== "undefined") window.localStorage.setItem("cgo.crm.leads", JSON.stringify(leads))
+  }, [leads])
+
+  useEffect(() => {
+    if (typeof window !== "undefined") window.localStorage.setItem("cgo.crm.campaigns", JSON.stringify(campaigns))
+  }, [campaigns])
   const [scheduledFollowUps, setScheduledFollowUps] = useState<any[]>([])
   const [newLead, setNewLead] = useState({
     name: "",
@@ -193,7 +216,7 @@ export default function CRMPage() {
     <div className="flex h-screen bg-gray-50">
       <AppSidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <MainHeader title="CRM - Gestão de Relacionamento" />
+        <MainHeader />
         <main className="flex-1 overflow-auto p-8">
           {/* KPIs */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

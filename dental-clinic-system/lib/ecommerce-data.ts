@@ -9,7 +9,9 @@ export interface Product {
   description: string
   supplier: string
   minQuantity?: number
-  recommended?: boolean // Se é recomendado pelas propagandas
+  recommended?: boolean
+  discount?: number
+  inStock?: boolean
 }
 
 export interface CartItem {

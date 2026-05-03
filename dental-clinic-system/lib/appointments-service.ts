@@ -18,6 +18,14 @@ import {
   type Unsubscribe,
 } from "firebase/firestore"
 import { getDb } from "@/lib/firebase"
+import {
+  localGetAppointments,
+  localGetAppointmentsByDateRange,
+  localCreateAppointment,
+  localUpdateAppointment,
+  localDeleteAppointment,
+  localSubscribeToAppointmentsByDateRange,
+} from "@/lib/appointments-local"
 
 export interface Appointment {
   id: string
@@ -62,7 +70,7 @@ function fromFirestore(docData: DocumentData, id: string): Appointment {
 
 export async function getAppointments(): Promise<Appointment[]> {
   const db = getDb()
-  if (!db) return []
+  if (!db) return localGetAppointments()
   const snap = await getDocs(query(collection(db, COL), orderBy("date")))
   return snap.docs.map((d) => fromFirestore(d.data(), d.id))
 }
@@ -72,7 +80,7 @@ export async function getAppointmentsByDateRange(
   endDate: string,
 ): Promise<Appointment[]> {
   const db = getDb()
-  if (!db) return []
+  if (!db) return localGetAppointmentsByDateRange(startDate, endDate)
   const snap = await getDocs(
     query(
       collection(db, COL),
@@ -98,7 +106,7 @@ export interface CreateAppointmentInput {
 
 export async function createAppointment(input: CreateAppointmentInput): Promise<string> {
   const db = getDb()
-  if (!db) throw new Error("Firebase não inicializado")
+  if (!db) return localCreateAppointment(input)
   const docRef = await addDoc(collection(db, COL), {
     ...input,
     status: input.status ?? "scheduled",
@@ -112,13 +120,13 @@ export async function updateAppointment(
   data: Partial<Omit<Appointment, "id" | "createdAt" | "createdBy">>,
 ): Promise<void> {
   const db = getDb()
-  if (!db) throw new Error("Firebase não inicializado")
+  if (!db) { localUpdateAppointment(id, data); return }
   await updateDoc(doc(db, COL, id), data)
 }
 
 export async function deleteAppointment(id: string): Promise<void> {
   const db = getDb()
-  if (!db) throw new Error("Firebase não inicializado")
+  if (!db) { localDeleteAppointment(id); return }
   await deleteDoc(doc(db, COL, id))
 }
 
@@ -130,8 +138,7 @@ export function subscribeToAppointmentsByDateRange(
 ): Unsubscribe {
   const db = getDb()
   if (!db) {
-    onData([])
-    return () => {}
+    return localSubscribeToAppointmentsByDateRange(startDate, endDate, onData)
   }
   return onSnapshot(
     query(

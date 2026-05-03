@@ -537,11 +537,11 @@ export default function EstoquePage() {
                     <Card key={fav.productId} className="overflow-hidden">
                       <div className="relative">
                         <img
-                          src={product.imageUrl}
+                          src={product.image}
                           alt={product.name}
                           className="w-full h-48 object-cover"
                         />
-                        {product.discount > 0 && (
+                        {(product.discount ?? 0) > 0 && (
                           <Badge className="absolute top-2 right-2 bg-red-600">
                             -{product.discount}%
                           </Badge>
@@ -562,14 +562,14 @@ export default function EstoquePage() {
                       <CardContent>
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            {product.discount > 0 && (
+                            {(product.discount ?? 0) > 0 && (
                               <p className="text-sm text-gray-500 line-through">
                                 {formatCurrency(product.price)}
                               </p>
                             )}
                             <p className="text-xl font-bold text-[#50348F]">
-                              {formatCurrency(product.discount > 0 
-                                ? product.price * (1 - product.discount / 100)
+                              {formatCurrency((product.discount ?? 0) > 0 
+                                ? product.price * (1 - (product.discount ?? 0) / 100)
                                 : product.price)}
                             </p>
                           </div>

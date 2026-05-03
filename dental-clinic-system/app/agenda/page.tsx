@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { MainHeader } from "@/components/main-header"
-import { MainFooter } from "@/components/main-footer"
+
 import { NewAppointmentDialog } from "@/components/new-appointment-dialog"
 import { OnlineBooking } from "@/components/online-booking"
 import { WaitingList } from "@/components/waiting-list"
@@ -23,7 +23,7 @@ import { AppointmentStatusBadge } from "@/components/appointment-status-badge"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "@/components/ui/use-toast"
 
-const SLOT_HEIGHT = 28
+const SLOT_HEIGHT = 64
 
 const DAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
 const MONTH_SHORT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
@@ -92,6 +92,12 @@ export default function AgendaPage() {
   const [waitingList, setWaitingList] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState("calendar")
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [nowTime, setNowTime] = useState(new Date())
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTime(new Date()), 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   const weekDates = getWeekDates(currentDate)
   const dateRangeStart = formatDateKey(viewMode === "day" ? currentDate : weekDates[0])
@@ -117,6 +123,15 @@ export default function AgendaPage() {
   const selectedProfessional = selectedAppointment
     ? mockProfessionals.find((p) => p.id === selectedAppointment.professionalId)
     : null
+
+  const nowOffsetPx = (() => {
+    const h = nowTime.getHours()
+    const m = nowTime.getMinutes()
+    const totalMin = h * 60 + m
+    const startMin = 7 * 60
+    if (totalMin < startMin || totalMin > 20 * 60) return null
+    return ((totalMin - startMin) / 15) * SLOT_HEIGHT
+  })()
 
   function navigate(dir: -1 | 1) {
     setCurrentDate((prev) => {
@@ -282,7 +297,7 @@ export default function AgendaPage() {
               {/* Body: left panel + calendar grid */}
               <div className="flex flex-1 min-h-0 overflow-hidden">
                 {/* Left panel */}
-                <div className="w-44 shrink-0 border-r border-gray-200 bg-white overflow-y-auto">
+                <div className="w-36 shrink-0 border-r border-gray-200 bg-white overflow-y-auto">
                   <div className="p-3 space-y-4">
                     {/* Professional filters */}
                     <div>
@@ -390,7 +405,7 @@ export default function AgendaPage() {
                         className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm"
                         style={{
                           display: "grid",
-                          gridTemplateColumns: "52px repeat(7, minmax(90px, 1fr))",
+                          gridTemplateColumns: "60px repeat(7, minmax(130px, 1fr))",
                         }}
                       >
                         <div className="border-r border-gray-200 py-2" />
@@ -404,9 +419,9 @@ export default function AgendaPage() {
                           return (
                             <div
                               key={idx}
-                              className="border-r border-gray-200 py-2 px-1 flex flex-col items-center gap-0.5"
+                              className={`border-r border-gray-200 py-2 px-1 flex flex-col items-center gap-1 ${isToday ? "bg-[#50348F]/5" : ""}`}
                             >
-                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                              <span className={`text-[11px] font-bold uppercase tracking-wide ${isToday ? "text-[#50348F]" : "text-gray-400"}`}>
                                 {DAY_NAMES[date.getDay()]}
                               </span>
                               <button
@@ -414,18 +429,20 @@ export default function AgendaPage() {
                                   setCurrentDate(new Date(date))
                                   setViewMode("day")
                                 }}
-                                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
                                   isToday
-                                    ? "bg-[#50348F] text-white"
+                                    ? "bg-[#50348F] text-white shadow-md"
                                     : "hover:bg-gray-100 text-gray-700"
                                 }`}
                               >
                                 {date.getDate()}
                               </button>
-                              {aptCount > 0 && (
-                                <span className="text-[9px] font-semibold text-[#50348F]">
+                              {aptCount > 0 ? (
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isToday ? "bg-[#50348F] text-white" : "bg-[#50348F]/10 text-[#50348F]"}`}>
                                   {aptCount}
                                 </span>
+                              ) : (
+                                <span className="h-5" />
                               )}
                             </div>
                           )
@@ -433,7 +450,25 @@ export default function AgendaPage() {
                       </div>
 
                       {/* Time rows */}
-                      <div className="bg-white">
+                      <div className="bg-white relative">
+                        {nowOffsetPx !== null && (() => {
+                          const todayIdx = weekDates.findIndex((d) => d.toDateString() === today.toDateString())
+                          if (todayIdx === -1) return null
+                          const colWidth = `${100 / 7}%`
+                          return (
+                            <div
+                              className="absolute z-20 pointer-events-none flex items-center"
+                              style={{
+                                top: nowOffsetPx,
+                                left: `calc(52px + ${todayIdx} * ${colWidth})`,
+                                width: colWidth,
+                              }}
+                            >
+                              <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+                              <div className="flex-1 h-px bg-red-500 opacity-80" />
+                            </div>
+                          )
+                        })()}
                         {TIME_SLOTS.map((time) => {
                           const isHour = time.endsWith(":00")
                           return (
@@ -442,13 +477,13 @@ export default function AgendaPage() {
                               className={isHour ? "border-t border-gray-200" : "border-t border-gray-100"}
                               style={{
                                 display: "grid",
-                                gridTemplateColumns: "52px repeat(7, minmax(90px, 1fr))",
+                                gridTemplateColumns: "60px repeat(7, minmax(130px, 1fr))",
                                 height: SLOT_HEIGHT,
                               }}
                             >
                               <div className="border-r border-gray-200 flex items-start justify-end pr-1.5 pt-0.5">
                                 {isHour && (
-                                  <span className="text-[10px] font-medium text-gray-400 tabular-nums">
+                                  <span className="text-[11px] font-medium text-gray-500 tabular-nums">
                                     {time}
                                   </span>
                                 )}
@@ -490,7 +525,7 @@ export default function AgendaPage() {
                                             setSelectedAppointmentId(apt.id)
                                             setConfirmDelete(false)
                                           }}
-                                          className="absolute rounded px-1 py-0.5 text-left overflow-hidden hover:brightness-90 z-10 shadow-sm transition-all"
+                                          className="absolute rounded px-1.5 py-1 text-left overflow-hidden hover:brightness-90 z-10 shadow-sm transition-all"
                                           style={{
                                             backgroundColor: prof?.color ?? "#6366f1",
                                             color: "white",
@@ -500,13 +535,13 @@ export default function AgendaPage() {
                                             width: `${(1 / n) * 100}%`,
                                           }}
                                         >
-                                          <div className="font-semibold truncate text-[9px] leading-tight">
+                                          <div className="font-semibold truncate text-xs leading-tight">
                                             {patient
                                               ? `${patient.name} ${patient.lastName}`
                                               : "Paciente"}
                                           </div>
-                                          {durationSlots >= 3 && (
-                                            <div className="text-[8px] opacity-80 leading-tight">
+                                          {durationSlots >= 2 && (
+                                            <div className="text-[11px] opacity-85 leading-tight mt-0.5">
                                               {apt.startTime}–{apt.endTime}
                                             </div>
                                           )}
@@ -531,21 +566,24 @@ export default function AgendaPage() {
                         className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm"
                         style={{
                           display: "grid",
-                          gridTemplateColumns: `52px repeat(${filteredProfessionals.length || 1}, minmax(110px, 1fr))`,
+                          gridTemplateColumns: `60px repeat(${filteredProfessionals.length || 1}, minmax(150px, 1fr))`,
                         }}
                       >
                         <div className="border-r border-gray-200 py-2" />
                         {filteredProfessionals.map((prof) => (
                           <div
                             key={prof.id}
-                            className="border-r border-gray-200 px-2 py-2.5 flex items-center justify-center gap-1.5 min-w-0"
+                            className="border-r border-gray-200 px-2 py-3 flex flex-col items-center justify-center gap-1 min-w-0"
+                            style={{ borderTop: `3px solid ${prof.color}` }}
                           >
                             <span
-                              className="w-2 h-2 rounded-full shrink-0"
+                              className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold"
                               style={{ backgroundColor: prof.color }}
-                            />
+                            >
+                              {prof.name.charAt(0)}
+                            </span>
                             <span
-                              className="text-xs font-semibold truncate"
+                              className="text-xs font-semibold text-center leading-tight line-clamp-2"
                               style={{ color: prof.color }}
                               title={prof.name}
                             >
@@ -563,7 +601,16 @@ export default function AgendaPage() {
                       </div>
 
                       {/* Time rows */}
-                      <div className="bg-white">
+                      <div className="bg-white relative">
+                        {nowOffsetPx !== null && currentDate.toDateString() === today.toDateString() && (
+                          <div
+                            className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                            style={{ top: nowOffsetPx }}
+                          >
+                            <span className="w-2 h-2 rounded-full bg-red-500 ml-15 shrink-0" />
+                            <div className="flex-1 h-px bg-red-500 opacity-80" />
+                          </div>
+                        )}
                         {TIME_SLOTS.map((time) => {
                           const isHour = time.endsWith(":00")
                           return (
@@ -572,13 +619,13 @@ export default function AgendaPage() {
                               className={isHour ? "border-t border-gray-200" : "border-t border-gray-100"}
                               style={{
                                 display: "grid",
-                                gridTemplateColumns: `52px repeat(${filteredProfessionals.length || 1}, minmax(110px, 1fr))`,
+                                gridTemplateColumns: `60px repeat(${filteredProfessionals.length || 1}, minmax(150px, 1fr))`,
                                 height: SLOT_HEIGHT,
                               }}
                             >
                               <div className="border-r border-gray-200 flex items-start justify-end pr-1.5 pt-0.5">
                                 {isHour && (
-                                  <span className="text-[10px] font-medium text-gray-400 tabular-nums">
+                                  <span className="text-[11px] font-medium text-gray-500 tabular-nums">
                                     {time}
                                   </span>
                                 )}
@@ -621,7 +668,7 @@ export default function AgendaPage() {
                                             setSelectedAppointmentId(apt.id)
                                             setConfirmDelete(false)
                                           }}
-                                          className="absolute left-0.5 right-0.5 rounded px-1.5 py-0.5 text-left overflow-hidden hover:brightness-90 z-10 shadow-sm transition-all"
+                                          className="absolute left-0.5 right-0.5 rounded px-2 py-1 text-left overflow-hidden hover:brightness-90 z-10 shadow-sm transition-all"
                                           style={{
                                             backgroundColor: prof.color,
                                             color: "white",
@@ -629,13 +676,13 @@ export default function AgendaPage() {
                                             top: 1,
                                           }}
                                         >
-                                          <div className="font-semibold truncate text-[10px] leading-tight">
+                                          <div className="font-semibold truncate text-sm leading-tight">
                                             {patient
                                               ? `${patient.name} ${patient.lastName}`
                                               : "Paciente"}
                                           </div>
-                                          {durationSlots >= 3 && (
-                                            <div className="text-[9px] opacity-80 leading-tight">
+                                          {durationSlots >= 2 && (
+                                            <div className="text-xs opacity-85 leading-tight mt-0.5">
                                               {apt.startTime}–{apt.endTime}
                                             </div>
                                           )}
@@ -680,7 +727,6 @@ export default function AgendaPage() {
             </TabsContent>
           </Tabs>
         </main>
-        <MainFooter />
       </div>
 
       {/* ── APPOINTMENT DETAIL DIALOG ── */}

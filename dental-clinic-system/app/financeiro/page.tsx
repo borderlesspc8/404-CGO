@@ -89,13 +89,60 @@ const initialTransactions = [
   },
 ]
 
+const FINANCEIRO_KEY = "cgo.financeiro"
+
+function loadTransactions() {
+  if (typeof window === "undefined") return initialTransactions
+  try {
+    const raw = window.localStorage.getItem(FINANCEIRO_KEY)
+    if (!raw) return initialTransactions
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : initialTransactions
+  } catch {
+    return initialTransactions
+  }
+}
+
 export default function FinanceiroPage() {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [transactions, setTransactions] = useState(initialTransactions)
+
+  useEffect(() => {
+    setTransactions(loadTransactions())
+  }, [])
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && transactions !== initialTransactions) {
+      window.localStorage.setItem(FINANCEIRO_KEY, JSON.stringify(transactions))
+    }
+  }, [transactions])
   const [showReceitaDialog, setShowReceitaDialog] = useState(false)
   const [showDespesaDialog, setShowDespesaDialog] = useState(false)
+  const [saldoAbertura, setSaldoAbertura] = useState(5000)
+
+  const todayKey = new Date().toISOString().split("T")[0]
+  const todayTransactions = transactions.filter((t) => t.date === todayKey)
+  const entradasHoje = todayTransactions.filter((t) => t.type === "receita").reduce((s, t) => s + t.value, 0)
+  const saidasHoje = todayTransactions.filter((t) => t.type === "despesa").reduce((s, t) => s + t.value, 0)
+  const saldoFechamento = saldoAbertura + entradasHoje - saidasHoje
+
+  const contasReceber = transactions.filter((t) => t.type === "receita" && t.status !== "pago")
+  const contasPagar = transactions.filter((t) => t.type === "despesa" && t.status !== "pago")
+
+  const handleMarkAsPaid = (id: string) => {
+    setTransactions((prev) => prev.map((t) => t.id === id ? { ...t, status: "pago" } : t))
+  }
+
+  const categoryTotals = (() => {
+    const map: Record<string, { receita: number; despesa: number }> = {}
+    transactions.forEach((t) => {
+      if (!map[t.category]) map[t.category] = { receita: 0, despesa: 0 }
+      map[t.category][t.type as "receita" | "despesa"] += t.value
+    })
+    return Object.entries(map).map(([cat, vals]) => ({ cat, ...vals, net: vals.receita - vals.despesa }))
+  })()
   
   // Form states
   const [formData, setFormData] = useState({
@@ -132,7 +179,7 @@ export default function FinanceiroPage() {
     if (!formData.description || !formData.value) return
     
     const newTransaction = {
-      id: (transactions.length + 1).toString(),
+      id: `txn_${Date.now()}`,
       date: formData.date,
       description: formData.description,
       type: "receita" as const,
@@ -150,7 +197,7 @@ export default function FinanceiroPage() {
     if (!formData.description || !formData.value) return
     
     const newTransaction = {
-      id: (transactions.length + 1).toString(),
+      id: `txn_${Date.now()}`,
       date: formData.date,
       description: formData.description,
       type: "despesa" as const,
@@ -356,46 +403,267 @@ export default function FinanceiroPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="caixa">
+            {/* ── CAIXA ── */}
+            <TabsContent value="caixa" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Controle de Caixa</CardTitle>
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <CardTitle className="flex items-center gap-2">
+                      <Wallet className="w-5 h-5 text-[#50348F]" />
+                      Controle de Caixa — {new Date().toLocaleDateString("pt-BR")}
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm whitespace-nowrap">Saldo de abertura:</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={saldoAbertura}
+                        onChange={(e) => setSaldoAbertura(parseFloat(e.target.value) || 0)}
+                        className="w-36 h-8 text-sm"
+                      />
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-500">Funcionalidade de controle de caixa em desenvolvimento...</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    {[
+                      { label: "Abertura", value: saldoAbertura, color: "text-gray-700", bg: "bg-gray-50" },
+                      { label: "Entradas", value: entradasHoje, color: "text-green-600", bg: "bg-green-50" },
+                      { label: "Saídas", value: saidasHoje, color: "text-red-500", bg: "bg-red-50" },
+                      { label: "Fechamento", value: saldoFechamento, color: saldoFechamento >= 0 ? "text-[#50348F]" : "text-red-600", bg: saldoFechamento >= 0 ? "bg-[#50348F]/5" : "bg-red-50" },
+                    ].map(({ label, value, color, bg }) => (
+                      <div key={label} className={`${bg} rounded-lg p-4 text-center`}>
+                        <p className="text-xs text-gray-500 mb-1">{label}</p>
+                        <p className={`text-xl font-bold ${color}`}>R$ {value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Descrição</TableHead>
+                        <TableHead>Categoria</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead className="text-right">Valor</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {todayTransactions.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center text-gray-400 py-8">Nenhuma movimentação hoje</TableCell>
+                        </TableRow>
+                      ) : todayTransactions.map((t) => (
+                        <TableRow key={t.id}>
+                          <TableCell>{t.description}</TableCell>
+                          <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
+                          <TableCell>
+                            <Badge className={t.type === "receita" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
+                              {t.type === "receita" ? "Entrada" : "Saída"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className={`text-right font-semibold ${t.type === "receita" ? "text-green-600" : "text-red-500"}`}>
+                            {t.type === "receita" ? "+" : "−"} R$ {t.value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="contas-receber">
+            {/* ── CONTAS A RECEBER ── */}
+            <TabsContent value="contas-receber" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Contas a Receber</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-green-600" />
+                    Contas a Receber
+                    <Badge className="bg-orange-100 text-orange-700 ml-2">{contasReceber.length} pendente{contasReceber.length !== 1 ? "s" : ""}</Badge>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-500">Lista de contas a receber em desenvolvimento...</p>
+                  {contasReceber.length === 0 ? (
+                    <p className="text-center text-gray-400 py-8">Nenhuma conta a receber pendente</p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Data</TableHead>
+                          <TableHead>Descrição</TableHead>
+                          <TableHead>Categoria</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                          <TableHead />
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {contasReceber.map((t) => (
+                          <TableRow key={t.id}>
+                            <TableCell className="text-sm">{new Date(t.date).toLocaleDateString("pt-BR")}</TableCell>
+                            <TableCell>{t.description}</TableCell>
+                            <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
+                            <TableCell>
+                              <Badge className="bg-orange-100 text-orange-700">
+                                {t.status === "pendente" ? "Pendente" : "Aprovado"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right font-semibold text-green-600">
+                              R$ {t.value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell>
+                              <Button size="sm" variant="outline" className="h-7 text-xs text-green-700 border-green-300 hover:bg-green-50" onClick={() => handleMarkAsPaid(t.id)}>
+                                Recebido
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                  <div className="mt-4 pt-4 border-t flex justify-between text-sm">
+                    <span className="text-gray-500">Total pendente:</span>
+                    <span className="font-bold text-green-600">
+                      R$ {contasReceber.reduce((s, t) => s + t.value, 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="contas-pagar">
+            {/* ── CONTAS A PAGAR ── */}
+            <TabsContent value="contas-pagar" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Contas a Pagar</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingDown className="w-5 h-5 text-red-500" />
+                    Contas a Pagar
+                    <Badge className="bg-red-100 text-red-700 ml-2">{contasPagar.length} pendente{contasPagar.length !== 1 ? "s" : ""}</Badge>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-500">Lista de contas a pagar em desenvolvimento...</p>
+                  {contasPagar.length === 0 ? (
+                    <p className="text-center text-gray-400 py-8">Nenhuma conta a pagar pendente</p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Data</TableHead>
+                          <TableHead>Descrição</TableHead>
+                          <TableHead>Categoria</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                          <TableHead />
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {contasPagar.map((t) => (
+                          <TableRow key={t.id}>
+                            <TableCell className="text-sm">{new Date(t.date).toLocaleDateString("pt-BR")}</TableCell>
+                            <TableCell>{t.description}</TableCell>
+                            <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
+                            <TableCell>
+                              <Badge className="bg-orange-100 text-orange-700">
+                                {t.status === "pendente" ? "Pendente" : "Aprovado"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right font-semibold text-red-500">
+                              R$ {t.value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell>
+                              <Button size="sm" variant="outline" className="h-7 text-xs text-red-700 border-red-300 hover:bg-red-50" onClick={() => handleMarkAsPaid(t.id)}>
+                                Pago
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                  <div className="mt-4 pt-4 border-t flex justify-between text-sm">
+                    <span className="text-gray-500">Total pendente:</span>
+                    <span className="font-bold text-red-500">
+                      R$ {contasPagar.reduce((s, t) => s + t.value, 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="relatorios">
+            {/* ── RELATÓRIOS ── */}
+            <TabsContent value="relatorios" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { label: "Total de Receitas", value: totalReceitas, color: "text-green-600", bar: "bg-green-500" },
+                  { label: "Total de Despesas", value: totalDespesas, color: "text-red-500", bar: "bg-red-400" },
+                  { label: "Resultado Líquido", value: saldo, color: saldo >= 0 ? "text-[#50348F]" : "text-red-600", bar: saldo >= 0 ? "bg-[#50348F]" : "bg-red-500" },
+                ].map(({ label, value, color }) => (
+                  <Card key={label}>
+                    <CardContent className="pt-6">
+                      <p className="text-sm text-gray-500 mb-1">{label}</p>
+                      <p className={`text-2xl font-bold ${color}`}>R$ {value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
               <Card>
-                <CardHeader>
-                  <CardTitle>Relatórios Financeiros</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Receitas × Despesas por Categoria</CardTitle></CardHeader>
                 <CardContent>
-                  <p className="text-gray-500">Relatórios financeiros em desenvolvimento...</p>
+                  <div className="space-y-4">
+                    {categoryTotals.map(({ cat, receita, despesa }) => {
+                      const max = Math.max(receita, despesa, 1)
+                      return (
+                        <div key={cat}>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="font-medium">{cat}</span>
+                            <span className="text-gray-500 text-xs">
+                              <span className="text-green-600">+R${receita.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                              {despesa > 0 && <span className="text-red-500 ml-2">−R${despesa.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>}
+                            </span>
+                          </div>
+                          <div className="flex gap-1 h-3">
+                            <div className="bg-green-500 rounded-l" style={{ width: `${(receita / max) * 100}%`, minWidth: receita > 0 ? 4 : 0 }} />
+                            <div className="bg-red-400 rounded-r" style={{ width: `${(despesa / max) * 100}%`, minWidth: despesa > 0 ? 4 : 0 }} />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle>Distribuição de Receitas por Categoria</CardTitle></CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Categoria</TableHead>
+                        <TableHead className="text-right">Receitas</TableHead>
+                        <TableHead className="text-right">Despesas</TableHead>
+                        <TableHead className="text-right">Resultado</TableHead>
+                        <TableHead className="text-right">% do Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {categoryTotals.map(({ cat, receita, despesa, net }) => (
+                        <TableRow key={cat}>
+                          <TableCell><Badge variant="outline">{cat}</Badge></TableCell>
+                          <TableCell className="text-right text-green-600 font-medium">
+                            {receita > 0 ? `R$ ${receita.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}
+                          </TableCell>
+                          <TableCell className="text-right text-red-500 font-medium">
+                            {despesa > 0 ? `R$ ${despesa.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}
+                          </TableCell>
+                          <TableCell className={`text-right font-bold ${net >= 0 ? "text-green-600" : "text-red-500"}`}>
+                            R$ {net.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell className="text-right text-gray-500">
+                            {totalReceitas > 0 ? `${((receita / totalReceitas) * 100).toFixed(1)}%` : "—"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -405,7 +673,7 @@ export default function FinanceiroPage() {
 
       {/* Dialog Nova Receita */}
       <Dialog open={showReceitaDialog} onOpenChange={setShowReceitaDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-125">
           <DialogHeader>
             <DialogTitle className="text-green-600 flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
@@ -507,7 +775,7 @@ export default function FinanceiroPage() {
 
       {/* Dialog Nova Despesa */}
       <Dialog open={showDespesaDialog} onOpenChange={setShowDespesaDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-125">
           <DialogHeader>
             <DialogTitle className="text-red-500 flex items-center gap-2">
               <TrendingDown className="w-5 h-5" />

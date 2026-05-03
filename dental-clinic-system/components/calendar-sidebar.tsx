@@ -151,11 +151,9 @@ export function CalendarSidebar({
                 id={`prof-${professional.id}`}
                 checked={selectedProfessionals.includes(professional.id)}
                 onCheckedChange={() => onProfessionalToggle(professional.id)}
-                style={{
-                  borderColor: professional.color,
-                }}
                 className="data-[state=checked]:bg-transparent"
                 style={{
+                  borderColor: professional.color,
                   backgroundColor: selectedProfessionals.includes(professional.id) ? professional.color : "transparent",
                 }}
               />
