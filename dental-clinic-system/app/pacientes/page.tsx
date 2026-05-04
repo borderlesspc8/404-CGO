@@ -20,6 +20,44 @@ import { toast } from "@/components/ui/use-toast"
 import { Camera, Home, Mail, Phone, Plus, Search, Upload, Users } from "lucide-react"
 import type { Patient } from "@/lib/mock-data"
 
+function maskCPF(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 11)
+  if (d.length <= 3) return d
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`
+}
+
+function maskRG(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 9)
+  if (d.length <= 2) return d
+  if (d.length <= 5) return `${d.slice(0, 2)}.${d.slice(2)}`
+  if (d.length <= 8) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5)}`
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}-${d.slice(8)}`
+}
+
+function maskPhone(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 11)
+  if (d.length <= 2) return d.length ? `(${d}` : d
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
+}
+
+function maskCEP(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 8)
+  if (d.length <= 5) return d
+  return `${d.slice(0, 5)}-${d.slice(5)}`
+}
+
+function onlyLetters(value: string): string {
+  return value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "")
+}
+
+function onlyNumbers(value: string): string {
+  return value.replace(/\D/g, "")
+}
+
 const emptyForm: PatientFormInput = {
   name: "",
   lastName: "",
@@ -256,49 +294,125 @@ export default function PacientesPage() {
                   <h3 className="text-sm font-bold uppercase tracking-wide text-[#50348F] mb-3">Dados pessoais</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Field label="Nome" required>
-                      <Input value={form.name} onChange={(e) => updateForm("name", e.target.value)} />
+                      <Input
+                        value={form.name}
+                        onChange={(e) => updateForm("name", onlyLetters(e.target.value))}
+                        placeholder="Apenas letras"
+                      />
                     </Field>
                     <Field label="Sobrenome" required>
-                      <Input value={form.lastName} onChange={(e) => updateForm("lastName", e.target.value)} />
+                      <Input
+                        value={form.lastName}
+                        onChange={(e) => updateForm("lastName", onlyLetters(e.target.value))}
+                        placeholder="Apenas letras"
+                      />
                     </Field>
                     <Field label="Telefone" required>
-                      <Input value={form.phone} onChange={(e) => updateForm("phone", e.target.value)} />
+                      <Input
+                        value={form.phone}
+                        onChange={(e) => updateForm("phone", maskPhone(e.target.value))}
+                        placeholder="(00) 00000-0000"
+                        inputMode="numeric"
+                      />
                     </Field>
                     <Field label="E-mail">
-                      <Input type="email" value={form.email} onChange={(e) => updateForm("email", e.target.value)} />
+                      <Input
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => updateForm("email", e.target.value)}
+                        placeholder="exemplo@email.com"
+                      />
                     </Field>
                     <Field label="CPF">
-                      <Input value={form.cpf} onChange={(e) => updateForm("cpf", e.target.value)} />
+                      <Input
+                        value={form.cpf}
+                        onChange={(e) => updateForm("cpf", maskCPF(e.target.value))}
+                        placeholder="000.000.000-00"
+                        inputMode="numeric"
+                      />
                     </Field>
                     <Field label="RG">
-                      <Input value={form.rg} onChange={(e) => updateForm("rg", e.target.value)} />
+                      <Input
+                        value={form.rg}
+                        onChange={(e) => updateForm("rg", maskRG(e.target.value))}
+                        placeholder="00.000.000-0"
+                        inputMode="numeric"
+                      />
                     </Field>
                     <Field label="Data de nascimento">
-                      <Input type="date" value={form.birthDate} onChange={(e) => updateForm("birthDate", e.target.value)} />
+                      <Input
+                        type="date"
+                        value={form.birthDate}
+                        onChange={(e) => updateForm("birthDate", e.target.value)}
+                        max={new Date().toISOString().split("T")[0]}
+                      />
                     </Field>
                     <Field label="Sexo">
-                      <Input value={form.gender} onChange={(e) => updateForm("gender", e.target.value)} />
+                      <select
+                        value={form.gender}
+                        onChange={(e) => updateForm("gender", e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        <option value="">Selecione</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Feminino">Feminino</option>
+                        <option value="Outro">Outro</option>
+                        <option value="Prefiro não informar">Prefiro não informar</option>
+                      </select>
                     </Field>
                     <Field label="Estado civil">
-                      <Input value={form.civilStatus} onChange={(e) => updateForm("civilStatus", e.target.value)} />
+                      <select
+                        value={form.civilStatus}
+                        onChange={(e) => updateForm("civilStatus", e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        <option value="">Selecione</option>
+                        <option value="Solteiro(a)">Solteiro(a)</option>
+                        <option value="Casado(a)">Casado(a)</option>
+                        <option value="Divorciado(a)">Divorciado(a)</option>
+                        <option value="Viúvo(a)">Viúvo(a)</option>
+                        <option value="União estável">União estável</option>
+                        <option value="Outro">Outro</option>
+                      </select>
                     </Field>
                     <Field label="Como conheceu">
-                      <Input value={form.howKnew} onChange={(e) => updateForm("howKnew", e.target.value)} />
+                      <select
+                        value={form.howKnew}
+                        onChange={(e) => updateForm("howKnew", e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        <option value="">Selecione</option>
+                        <option value="Indicação">Indicação</option>
+                        <option value="Google">Google</option>
+                        <option value="Instagram">Instagram</option>
+                        <option value="Facebook">Facebook</option>
+                        <option value="Plano de saúde">Plano de saúde</option>
+                        <option value="Outro">Outro</option>
+                      </select>
                     </Field>
                   </div>
                 </div>
 
                 <div>
                   <h3 className="text-sm font-bold uppercase tracking-wide text-[#50348F] mb-3">Endereco simplificado</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                    <Field label="CEP" className="md:col-span-2">
-                      <Input value={form.address.zipCode} onChange={(e) => updateAddress("zipCode", e.target.value)} />
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Field label="CEP" className="md:col-span-1">
+                      <Input
+                        value={form.address.zipCode}
+                        onChange={(e) => updateAddress("zipCode", maskCEP(e.target.value))}
+                        placeholder="00000-000"
+                        inputMode="numeric"
+                      />
                     </Field>
-                    <Field label="Rua" className="md:col-span-3">
+                    <Field label="Rua" className="md:col-span-2">
                       <Input value={form.address.street} onChange={(e) => updateAddress("street", e.target.value)} />
                     </Field>
-                    <Field label="Numero" className="md:col-span-1">
-                      <Input value={form.address.number} onChange={(e) => updateAddress("number", e.target.value)} />
+                    <Field label="Número" className="md:col-span-1">
+                      <Input
+                        value={form.address.number}
+                        onChange={(e) => updateAddress("number", onlyNumbers(e.target.value))}
+                        inputMode="numeric"
+                      />
                     </Field>
                     <Field label="Complemento" className="md:col-span-2">
                       <Input value={form.address.complement} onChange={(e) => updateAddress("complement", e.target.value)} />
@@ -306,11 +420,16 @@ export default function PacientesPage() {
                     <Field label="Bairro" className="md:col-span-2">
                       <Input value={form.address.neighborhood} onChange={(e) => updateAddress("neighborhood", e.target.value)} />
                     </Field>
-                    <Field label="Cidade" className="md:col-span-1">
+                    <Field label="Cidade" className="md:col-span-3">
                       <Input value={form.address.city} onChange={(e) => updateAddress("city", e.target.value)} />
                     </Field>
                     <Field label="UF" className="md:col-span-1">
-                      <Input maxLength={2} value={form.address.state} onChange={(e) => updateAddress("state", e.target.value.toUpperCase())} />
+                      <Input
+                        maxLength={2}
+                        value={form.address.state}
+                        onChange={(e) => updateAddress("state", onlyLetters(e.target.value).toUpperCase())}
+                        placeholder="RS"
+                      />
                     </Field>
                   </div>
                 </div>

@@ -94,6 +94,22 @@ export default function PropagandasPage() {
 	const [sendType, setSendType] = useState<"email"|"whatsapp"|null>(null);
 	const [feedback, setFeedback] = useState<string|null>(null);
 	const [selectedAd, setSelectedAd] = useState<PersonalizedAd|null>(null);
+	const [shareCopied, setShareCopied] = useState<string|null>(null);
+
+	async function handleShare(ad: PersonalizedAd) {
+		const text = `${ad.currentOffer}\n${ad.recommendation}\nServiço: ${ad.serviceType}\nValor estimado: ${formatCurrency(ad.estimatedValue)}`;
+		if (typeof navigator !== "undefined" && navigator.share) {
+			try {
+				await navigator.share({ title: ad.currentOffer, text });
+			} catch {
+				// usuário cancelou — não precisa fazer nada
+			}
+		} else {
+			await navigator.clipboard.writeText(text);
+			setShareCopied(ad.id);
+			setTimeout(() => setShareCopied(null), 2000);
+		}
+	}
 
 	const highPriorityAds = ads.filter((ad) => ad.priority === "alta");
 	const mediumPriorityAds = ads.filter((ad) => ad.priority === "média");
@@ -195,8 +211,9 @@ export default function PropagandasPage() {
 						<Button size="sm" variant="outline" className="flex-1 gap-2" title="Ir para ecommerce" onClick={() => window.location.href = "/ecommerce"}>
 							<ShoppingCart className="h-4 w-4" />Comprar
 						</Button>
-						<Button size="sm" variant="outline" className="flex-1 gap-2" title="Compartilhar em redes sociais">
-							<Share2 className="h-4 w-4" />Compartilhar
+						<Button size="sm" variant="outline" className="flex-1 gap-2" title="Compartilhar oferta" onClick={() => handleShare(ad)}>
+							<Share2 className="h-4 w-4" />
+							{shareCopied === ad.id ? "Copiado!" : "Compartilhar"}
 						</Button>
 					</div>
 				</CardContent>

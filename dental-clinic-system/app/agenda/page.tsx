@@ -703,7 +703,7 @@ export default function AgendaPage() {
             </TabsContent>
 
             {/* ── ONLINE BOOKING TAB ── */}
-            <TabsContent value="online" className="mt-0 p-6">
+            <TabsContent value="online" className="mt-0 p-6 overflow-y-auto flex-1">
               <OnlineBooking
                 professionals={mockProfessionals.map((p) => ({
                   id: p.id,
@@ -715,10 +715,15 @@ export default function AgendaPage() {
             </TabsContent>
 
             {/* ── WAITING LIST TAB ── */}
-            <TabsContent value="waiting" className="mt-0 p-6">
+            <TabsContent value="waiting" className="mt-0 p-6 overflow-y-auto flex-1">
               <WaitingList
                 entries={waitingList}
-                onAddEntry={(entry) => setWaitingList((prev) => [...prev, entry])}
+                onAddEntry={(entry) =>
+                  setWaitingList((prev) => [
+                    ...prev,
+                    { ...entry, id: `wl_${Date.now()}`, addedAt: new Date() },
+                  ])
+                }
                 onRemoveEntry={(id) => setWaitingList((prev) => prev.filter((e) => e.id !== id))}
                 onConvertToAppointment={(entry) =>
                   setWaitingList((prev) => prev.filter((e) => e.id !== entry.id))

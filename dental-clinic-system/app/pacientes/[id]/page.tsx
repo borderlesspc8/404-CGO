@@ -80,6 +80,7 @@ export default function PatientDetailPage() {
   const [draftAnamnese, setDraftAnamnese] = useState<AnamneseGroup[]>([])
   const [showProcedureDialog, setShowProcedureDialog] = useState(false)
   const [showPaymentDialog, setShowPaymentDialog] = useState(false)
+  const [procErrors, setProcErrors] = useState<Record<string, string>>({})
   const [procForm, setProcForm] = useState({ name: "", professional: "", date: "", value: "", status: "scheduled" as Procedure["status"] })
   const [payForm, setPayForm] = useState({ date: "", desc: "", method: "PIX", value: "", status: "pending" as Payment["status"] })
 
@@ -137,9 +138,12 @@ export default function PatientDetailPage() {
 
   // ── Procedimentos ──────────────────────────────────────────────────────────
   function addProcedure() {
-    if (!procForm.name || !procForm.date || !procForm.value) {
-      toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" }); return
-    }
+    const errors: Record<string, string> = {}
+    if (!procForm.name) errors.name = "Selecione o procedimento"
+    if (!procForm.date) errors.date = "Informe a data"
+    if (!procForm.value) errors.value = "Informe o valor"
+    if (Object.keys(errors).length > 0) { setProcErrors(errors); return }
+    setProcErrors({})
     const proc: Procedure = {
       id: `proc_${Date.now()}`,
       name: procForm.name,
@@ -459,7 +463,7 @@ export default function PatientDetailPage() {
                     {[
                       { name: "Contrato de Tratamento", date: patient.registeredAt, signed: true },
                       { name: "Termo de Consentimento Informado", date: patient.registeredAt, signed: true },
-                      { name: "Autorização de Uso de Imagem", date: patient.registeredAt, signed: false },
+                      { name: "Autorização de Uso de Imagem", date: patient.registeredAt, signed: !!patient.avatar },
                     ].map((doc) => (
                       <div key={doc.name} className="flex items-center justify-between px-4 py-3.5 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
                         <div className="flex items-center gap-3">
@@ -570,16 +574,17 @@ export default function PatientDetailPage() {
       </div>
 
       {/* Dialog: Novo Procedimento */}
-      <Dialog open={showProcedureDialog} onOpenChange={setShowProcedureDialog}>
+      <Dialog open={showProcedureDialog} onOpenChange={(open) => { setShowProcedureDialog(open); if (!open) { setProcErrors({}); setProcForm({ name: "", professional: "", date: "", value: "", status: "scheduled" }) } }}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle className="text-[#50348F]">Adicionar Procedimento</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-gray-500">Procedimento *</Label>
-              <Select value={procForm.name} onValueChange={(v) => setProcForm({ ...procForm, name: v })}>
-                <SelectTrigger className="border-[#50348F]/30"><SelectValue placeholder="Selecione o procedimento" /></SelectTrigger>
+              <Select value={procForm.name} onValueChange={(v) => { setProcForm({ ...procForm, name: v }); setProcErrors((e) => ({ ...e, name: "" })) }}>
+                <SelectTrigger className={`border-[#50348F]/30 ${procErrors.name ? "border-red-400" : ""}`}><SelectValue placeholder="Selecione o procedimento" /></SelectTrigger>
                 <SelectContent>{PROCEDURE_NAMES.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent>
               </Select>
+              {procErrors.name && <p className="text-xs text-red-500">{procErrors.name}</p>}
             </div>
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-gray-500">Profissional</Label>
@@ -588,11 +593,13 @@ export default function PatientDetailPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs font-semibold text-gray-500">Data *</Label>
-                <Input type="date" value={procForm.date} onChange={(e) => setProcForm({ ...procForm, date: e.target.value })} className="border-[#50348F]/30" />
+                <Input type="date" value={procForm.date} onChange={(e) => { setProcForm({ ...procForm, date: e.target.value }); setProcErrors((err) => ({ ...err, date: "" })) }} className={`border-[#50348F]/30 ${procErrors.date ? "border-red-400" : ""}`} />
+                {procErrors.date && <p className="text-xs text-red-500">{procErrors.date}</p>}
               </div>
               <div className="space-y-1">
                 <Label className="text-xs font-semibold text-gray-500">Valor (R$) *</Label>
-                <Input type="number" min="0" step="0.01" value={procForm.value} onChange={(e) => setProcForm({ ...procForm, value: e.target.value })} placeholder="0,00" className="border-[#50348F]/30" />
+                <Input type="number" min="0" step="0.01" value={procForm.value} onChange={(e) => { setProcForm({ ...procForm, value: e.target.value }); setProcErrors((err) => ({ ...err, value: "" })) }} placeholder="0,00" className={`border-[#50348F]/30 ${procErrors.value ? "border-red-400" : ""}`} />
+                {procErrors.value && <p className="text-xs text-red-500">{procErrors.value}</p>}
               </div>
             </div>
             <div className="space-y-1">
