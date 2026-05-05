@@ -33,7 +33,25 @@ import { ptBR } from "date-fns/locale"
 
 interface OnlineBookingProps {
   professionals: Array<{ id: string; name: string; specialty: string }>
-  onBookingComplete: (booking: any) => void
+  onBookingComplete: (booking: OnlineBookingData) => void | Promise<void>
+}
+
+export interface OnlineBookingData {
+  id: string
+  date: Date
+  time: string
+  professionalId: string
+  patient: {
+    name: string
+    email: string
+    phone: string
+    service: string
+    notes: string
+    notifyEmail: boolean
+    notifySms: boolean
+  }
+  status: "pending"
+  createdAt: Date
 }
 
 const availableSlots = [
@@ -46,6 +64,7 @@ export function OnlineBooking({ professionals, onBookingComplete }: OnlineBookin
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState<string>("")
   const [selectedProfessional, setSelectedProfessional] = useState<string>("")
+  const [saving, setSaving] = useState(false)
   const [patientData, setPatientData] = useState({
     name: "",
     email: "",
@@ -56,7 +75,7 @@ export function OnlineBooking({ professionals, onBookingComplete }: OnlineBookin
     notifySms: false,
   })
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedDate || !selectedTime || !selectedProfessional || !patientData.name || !patientData.phone) {
       toast({
         title: "Campos obrigatórios",
@@ -66,7 +85,7 @@ export function OnlineBooking({ professionals, onBookingComplete }: OnlineBookin
       return
     }
 
-    const booking = {
+    const booking: OnlineBookingData = {
       id: `booking-${Date.now()}`,
       date: selectedDate,
       time: selectedTime,
@@ -76,7 +95,9 @@ export function OnlineBooking({ professionals, onBookingComplete }: OnlineBookin
       createdAt: new Date(),
     }
 
-    onBookingComplete(booking)
+    setSaving(true)
+    await onBookingComplete(booking)
+    setSaving(false)
     
     toast({
       title: "Agendamento realizado!",
@@ -240,10 +261,10 @@ export function OnlineBooking({ professionals, onBookingComplete }: OnlineBookin
       )}
 
       {/* Passo 3: Dados do Paciente */}
-      {step === 3 && (
+      {step === 3 && (  
         <Card>
           <CardHeader>
-            <CardTitle>Seus Dados</CardTitle>
+            <CardTitle>Dados do Paciente</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -389,9 +410,9 @@ export function OnlineBooking({ professionals, onBookingComplete }: OnlineBookin
               <Button variant="outline" onClick={() => setStep(2)}>
                 Voltar
               </Button>
-              <Button onClick={handleSubmit} className="gap-2">
+              <Button onClick={handleSubmit} disabled={saving} className="gap-2">
                 <CheckCircle className="h-4 w-4" />
-                Confirmar Agendamento
+                {saving ? "Confirmando..." : "Confirmar Agendamento"}
               </Button>
             </div>
           </CardContent>

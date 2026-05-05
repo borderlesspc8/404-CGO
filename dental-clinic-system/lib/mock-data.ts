@@ -78,6 +78,22 @@ export interface Procedure {
 // Mock Users
 export const mockUsers: User[] = [
   {
+    id: "admin-borderless",
+    name: "Administrador Borderless",
+    email: "admin@borderless.local",
+    password: "Admin@123",
+    role: "admin",
+    avatar: "/admin-user-interface.png",
+  },
+  {
+    id: "prof-alaor-borderless",
+    name: "Alaor Pasian Júnior",
+    email: "alaor@borderless.local",
+    password: "Prof@123",
+    role: "professional",
+    avatar: "/dentist-visit.png",
+  },
+  {
     id: "1",
     name: "Rafael Correia",
     email: "admin@laperle.com",

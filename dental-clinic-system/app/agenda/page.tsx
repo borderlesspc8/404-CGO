@@ -6,12 +6,13 @@ import { useAuth } from "@/lib/auth-context"
 import { MainHeader } from "@/components/main-header"
 
 import { NewAppointmentDialog } from "@/components/new-appointment-dialog"
-import { OnlineBooking } from "@/components/online-booking"
+import { OnlineBooking, type OnlineBookingData } from "@/components/online-booking"
 import { WaitingList } from "@/components/waiting-list"
 import { AppSidebar } from "@/components/app-sidebar"
-import { mockPatients, mockProfessionals, mockSpecialties } from "@/lib/mock-data"
+import { mockPatients, mockProfessionals, mockSpecialties, type Patient } from "@/lib/mock-data"
+import { createStoredPatient } from "@/lib/patients-storage"
 import { useAppointments } from "@/hooks/use-appointments"
-import { updateAppointment, deleteAppointment, type Appointment } from "@/lib/appointments-service"
+import { createAppointment, updateAppointment, deleteAppointment, type Appointment } from "@/lib/appointments-service"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ChevronLeft, ChevronRight, CalendarIcon, Plus, Pencil, Trash2 } from "lucide-react"
@@ -46,6 +47,13 @@ const STATUS_COLORS: Record<Appointment["status"], string> = {
 
 function formatDateKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
+function addMinutes(time: string, minutes: number) {
+  const [hour, minute] = time.split(":").map(Number)
+  const date = new Date()
+  date.setHours(hour, minute + minutes, 0, 0)
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`
 }
 
 function getWeekDates(date: Date): Date[] {
@@ -93,6 +101,8 @@ export default function AgendaPage() {
   const [activeTab, setActiveTab] = useState("calendar")
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [nowTime, setNowTime] = useState(new Date())
+  const [onlineAppointments, setOnlineAppointments] = useState<Appointment[]>([])
+  const [onlinePatients, setOnlinePatients] = useState<Patient[]>([])
 
   useEffect(() => {
     const id = setInterval(() => setNowTime(new Date()), 60_000)
@@ -104,6 +114,14 @@ export default function AgendaPage() {
   const dateRangeEnd = formatDateKey(viewMode === "day" ? currentDate : weekDates[6])
 
   const { appointments, loading, error } = useAppointments(dateRangeStart, dateRangeEnd)
+  const displayedAppointments = [
+    ...appointments,
+    ...onlineAppointments.filter((appointment) => !appointments.some((item) => item.id === appointment.id)),
+  ]
+  const displayedPatients = [
+    ...mockPatients,
+    ...onlinePatients.filter((patient) => !mockPatients.some((item) => item.id === patient.id)),
+  ]
 
   const filteredProfessionals = mockProfessionals.filter((p) => selectedProfessionals.includes(p.id))
 
@@ -116,9 +134,9 @@ export default function AgendaPage() {
   if (isLoading || !isAuthenticated) return null
 
   // Derived data for detail dialog
-  const selectedAppointment = appointments.find((a) => a.id === selectedAppointmentId) ?? null
+  const selectedAppointment = displayedAppointments.find((a) => a.id === selectedAppointmentId) ?? null
   const selectedPatient = selectedAppointment
-    ? mockPatients.find((p) => p.id === selectedAppointment.patientId)
+    ? displayedPatients.find((p) => p.id === selectedAppointment.patientId)
     : null
   const selectedProfessional = selectedAppointment
     ? mockProfessionals.find((p) => p.id === selectedAppointment.professionalId)
@@ -196,9 +214,89 @@ export default function AgendaPage() {
 
   // Today's stats for the left panel
   const todayKey = formatDateKey(today)
-  const todayApts = appointments.filter(
+  const todayApts = displayedAppointments.filter(
     (a) => a.date === todayKey && selectedProfessionals.includes(a.professionalId),
   )
+
+  async function handleOnlineBookingComplete(booking: OnlineBookingData) {
+    const [firstName, ...lastNameParts] = booking.patient.name.trim().split(/\s+/)
+    const patient = createStoredPatient({
+      name: firstName || booking.patient.name,
+      lastName: lastNameParts.join(" ") || "Online",
+      cpf: "",
+      rg: "",
+      birthDate: "",
+      gender: "",
+      civilStatus: "",
+      howKnew: "Agendamento Online",
+      phone: booking.patient.phone,
+      email: booking.patient.email,
+      address: {
+        street: "",
+        number: "",
+        complement: "",
+        neighborhood: "",
+        city: "",
+        state: "",
+        zipCode: "",
+      },
+      notes: booking.patient.notes,
+    })
+
+    const serviceLabel = booking.patient.service
+      ? booking.patient.service.charAt(0).toUpperCase() + booking.patient.service.slice(1)
+      : "Consulta"
+    const appointmentDate = formatDateKey(booking.date)
+    const optimisticAppointment: Appointment = {
+      id: booking.id,
+      patientId: patient.id,
+      professionalId: booking.professionalId,
+      date: appointmentDate,
+      startTime: booking.time,
+      endTime: addMinutes(booking.time, 30),
+      status: "scheduled",
+      type: serviceLabel,
+      notes: booking.patient.notes || "Agendamento criado pelo fluxo online",
+      createdBy: "Agendamento Online",
+      createdAt: booking.createdAt.toISOString(),
+    }
+
+    setOnlinePatients((prev) => [patient, ...prev.filter((item) => item.id !== patient.id)])
+    setOnlineAppointments((prev) => [
+      optimisticAppointment,
+      ...prev.filter((item) => item.id !== optimisticAppointment.id),
+    ])
+
+    setCurrentDate(new Date(booking.date))
+    setViewMode("day")
+    setActiveTab("calendar")
+    setSelectedProfessionals((prev) =>
+      prev.includes(booking.professionalId) ? prev : [...prev, booking.professionalId],
+    )
+
+    try {
+      const savedId = await createAppointment({
+        patientId: patient.id,
+        professionalId: booking.professionalId,
+        date: appointmentDate,
+        startTime: booking.time,
+        endTime: optimisticAppointment.endTime,
+        type: serviceLabel,
+        notes: optimisticAppointment.notes,
+        status: "scheduled",
+        createdBy: "Agendamento Online",
+      })
+
+      setOnlineAppointments((prev) =>
+        prev.map((item) => (item.id === booking.id ? { ...item, id: savedId } : item)),
+      )
+    } catch {
+      toast({
+        title: "Agendamento exibido no calendario",
+        description: "Nao foi possivel sincronizar com o banco agora, mas ele ja aparece nesta agenda.",
+      })
+    }
+  }
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -411,7 +509,7 @@ export default function AgendaPage() {
                         <div className="border-r border-gray-200 py-2" />
                         {weekDates.map((date, idx) => {
                           const isToday = date.toDateString() === today.toDateString()
-                          const aptCount = appointments.filter(
+                          const aptCount = displayedAppointments.filter(
                             (a) =>
                               a.date === formatDateKey(date) &&
                               selectedProfessionals.includes(a.professionalId),
@@ -490,7 +588,7 @@ export default function AgendaPage() {
                               </div>
                               {weekDates.map((date, idx) => {
                                 const dayKey = formatDateKey(date)
-                                const aptsHere = appointments.filter(
+                                const aptsHere = displayedAppointments.filter(
                                   (a) =>
                                     a.date === dayKey &&
                                     a.startTime === time &&
@@ -508,7 +606,7 @@ export default function AgendaPage() {
                                       const prof = mockProfessionals.find(
                                         (p) => p.id === apt.professionalId,
                                       )
-                                      const patient = mockPatients.find((p) => p.id === apt.patientId)
+                                      const patient = displayedPatients.find((p) => p.id === apt.patientId)
                                       const startMin =
                                         parseInt(apt.startTime.split(":")[0]) * 60 +
                                         parseInt(apt.startTime.split(":")[1])
@@ -632,7 +730,7 @@ export default function AgendaPage() {
                               </div>
                               {filteredProfessionals.map((prof) => {
                                 const dayKey = formatDateKey(currentDate)
-                                const aptsHere = appointments.filter(
+                                const aptsHere = displayedAppointments.filter(
                                   (a) =>
                                     a.professionalId === prof.id &&
                                     a.date === dayKey &&
@@ -652,7 +750,7 @@ export default function AgendaPage() {
                                   >
                                     <div className="absolute inset-0 group-hover:bg-[#50348F]/5 transition-colors pointer-events-none" />
                                     {aptsHere.map((apt) => {
-                                      const patient = mockPatients.find((p) => p.id === apt.patientId)
+                                      const patient = displayedPatients.find((p) => p.id === apt.patientId)
                                       const startMin =
                                         parseInt(apt.startTime.split(":")[0]) * 60 +
                                         parseInt(apt.startTime.split(":")[1])
@@ -710,7 +808,7 @@ export default function AgendaPage() {
                   name: p.name,
                   specialty: mockSpecialties.find((s) => s.id === p.specialtyId)?.name ?? "Geral",
                 }))}
-                onBookingComplete={(booking) => console.log("Reserva online:", booking)}
+                onBookingComplete={handleOnlineBookingComplete}
               />
             </TabsContent>
 
@@ -904,7 +1002,7 @@ export default function AgendaPage() {
         selectedTime={formData.time}
         selectedProfessionalId={formData.professionalId}
         appointmentToEdit={appointmentToEdit ?? undefined}
-        appointments={appointments}
+        appointments={displayedAppointments}
         onAppointmentCreated={() => {}}
       />
     </div>

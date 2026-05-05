@@ -37,7 +37,7 @@ export function MainHeader() {
   }
 
   const handleProfile = () => {
-    router.push("/perfil")
+    router.push("/minha-conta")
   }
 
   const handleSearch = (e: React.FormEvent) => {
