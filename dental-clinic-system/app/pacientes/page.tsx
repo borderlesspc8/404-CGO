@@ -58,6 +58,24 @@ function onlyNumbers(value: string): string {
   return value.replace(/\D/g, "")
 }
 
+function isValidCPF(cpf: string): boolean {
+  const d = cpf.replace(/\D/g, "")
+  if (d.length !== 11) return false
+  if (/^(\d)\1{10}$/.test(d)) return false
+  const calc = (size: number) => {
+    let sum = 0
+    for (let i = 0; i < size; i++) sum += parseInt(d[i]) * (size + 1 - i)
+    const rest = (sum * 10) % 11
+    return rest === 10 ? 0 : rest
+  }
+  return calc(9) === parseInt(d[9]) && calc(10) === parseInt(d[10])
+}
+
+function isValidPhone(phone: string): boolean {
+  const d = phone.replace(/\D/g, "")
+  return d.length === 10 || d.length === 11
+}
+
 const emptyForm: PatientFormInput = {
   name: "",
   lastName: "",
@@ -87,6 +105,7 @@ export default function PacientesPage() {
   const router = useRouter()
   const [search, setSearch] = useState("")
   const [patients, setPatients] = useState<Patient[]>([])
+  const [loadingPatients, setLoadingPatients] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [form, setForm] = useState<PatientFormInput>(emptyForm)
 
@@ -98,7 +117,12 @@ export default function PacientesPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      setPatients(getStoredPatients())
+      setLoadingPatients(true)
+      const timer = setTimeout(() => {
+        setPatients(getStoredPatients())
+        setLoadingPatients(false)
+      }, 300)
+      return () => clearTimeout(timer)
     }
   }, [isAuthenticated])
 
@@ -143,8 +167,26 @@ export default function PacientesPage() {
 
     if (!form.name.trim() || !form.lastName.trim() || !form.phone.trim()) {
       toast({
-        title: "Campos obrigatorios",
+        title: "Campos obrigatórios",
         description: "Informe nome, sobrenome e telefone do paciente.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!isValidPhone(form.phone)) {
+      toast({
+        title: "Telefone inválido",
+        description: "Informe um telefone com 10 ou 11 dígitos (DDD + número).",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (form.cpf.trim() && !isValidCPF(form.cpf)) {
+      toast({
+        title: "CPF inválido",
+        description: "Verifique os dígitos do CPF informado.",
         variant: "destructive",
       })
       return
@@ -201,7 +243,23 @@ export default function PacientesPage() {
               />
             </div>
 
-            {filtered.length === 0 ? (
+            {loadingPatients ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 animate-pulse">
+                    <div className="flex items-start gap-4">
+                      <div className="w-14 h-14 rounded-full bg-gray-200 shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-3/4" />
+                        <div className="h-3 bg-gray-100 rounded w-1/3" />
+                        <div className="h-3 bg-gray-100 rounded w-2/3 mt-3" />
+                        <div className="h-3 bg-gray-100 rounded w-1/2" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-gray-400">
                 <Users className="w-12 h-12 mb-3 opacity-30" />
                 <p className="font-medium text-gray-500">Nenhum paciente encontrado</p>
@@ -249,7 +307,7 @@ export default function PacientesPage() {
                             <p className="text-xs text-gray-500 flex items-center gap-1.5 truncate">
                               <Home className="w-3 h-3 shrink-0" />
                               {[patient.address.city, patient.address.state].filter(Boolean).join(" - ") ||
-                                "Endereco nao informado"}
+                                "Endereço não informado"}
                             </p>
                           </div>
                         </div>
@@ -394,7 +452,7 @@ export default function PacientesPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wide text-[#50348F] mb-3">Endereco simplificado</h3>
+                  <h3 className="text-sm font-bold uppercase tracking-wide text-[#50348F] mb-3">Endereço simplificado</h3>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <Field label="CEP" className="md:col-span-1">
                       <Input
@@ -434,7 +492,7 @@ export default function PacientesPage() {
                   </div>
                 </div>
 
-                <Field label="Observacoes">
+                <Field label="Observações">
                   <Textarea
                     value={form.notes}
                     onChange={(e) => updateForm("notes", e.target.value)}

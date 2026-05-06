@@ -18,7 +18,8 @@ import {
   Eye,
   Search as SearchIcon,
 } from "lucide-react"
-import { mockPatients, mockAppointments, mockProfessionals } from "@/lib/mock-data"
+import { mockAppointments, mockProfessionals } from "@/lib/mock-data"
+import { getStoredPatients } from "@/lib/patients-storage"
 
 interface SearchResult {
   id: string
@@ -60,21 +61,23 @@ export default function SearchClient() {
     setLoading(true)
     const lowerQuery = searchQuery.toLowerCase()
     const foundResults: SearchResult[] = []
+    const storedPatients = getStoredPatients()
 
-    mockPatients.forEach((patient) => {
+    storedPatients.forEach((patient) => {
       const fullName = `${patient.name} ${patient.lastName}`.toLowerCase()
       if (
         fullName.includes(lowerQuery) ||
-        patient.phone.includes(lowerQuery) ||
-        patient.email.toLowerCase().includes(lowerQuery) ||
-        patient.cpf.includes(lowerQuery)
+        (patient.phone || "").includes(lowerQuery) ||
+        (patient.email || "").toLowerCase().includes(lowerQuery) ||
+        (patient.cpf || "").includes(lowerQuery) ||
+        patient.id.toLowerCase().includes(lowerQuery)
       ) {
         foundResults.push({
           id: patient.id,
           type: "paciente",
           title: `${patient.name} ${patient.lastName}`,
-          subtitle: patient.phone,
-          description: patient.email,
+          subtitle: patient.phone || "Sem telefone",
+          description: patient.email || `#${patient.id}`,
           link: `/pacientes/${patient.id}`,
           icon: <Users className="w-5 h-5" />,
           badge: patient.status === "active" ? "Ativo" : "Inativo",
@@ -83,7 +86,7 @@ export default function SearchClient() {
     })
 
     mockAppointments.forEach((appointment) => {
-      const patient = mockPatients.find((p) => p.id === appointment.patientId)
+      const patient = storedPatients.find((p) => p.id === appointment.patientId)
       const professional = mockProfessionals.find((p) => p.id === appointment.professionalId)
       
       if (patient) {

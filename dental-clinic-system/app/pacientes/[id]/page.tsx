@@ -43,6 +43,7 @@ import {
   Phone,
   Plus,
   Printer,
+  Trash2,
   Upload,
   UserRound,
 } from "lucide-react"
@@ -83,6 +84,7 @@ export default function PatientDetailPage() {
   const [procErrors, setProcErrors] = useState<Record<string, string>>({})
   const [procForm, setProcForm] = useState({ name: "", professional: "", date: "", value: "", status: "scheduled" as Procedure["status"] })
   const [payForm, setPayForm] = useState({ date: "", desc: "", method: "PIX", value: "", status: "pending" as Payment["status"] })
+  const [deleteTarget, setDeleteTarget] = useState<{ type: "procedure" | "payment"; id: string; label: string } | null>(null)
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) { router.push("/"); return }
@@ -179,6 +181,22 @@ export default function PatientDetailPage() {
     setShowPaymentDialog(false)
     setPayForm({ date: "", desc: "", method: "PIX", value: "", status: "pending" })
     toast({ title: "Pagamento registrado" })
+  }
+
+  function confirmDeletion() {
+    if (!deleteTarget) return
+    if (deleteTarget.type === "procedure") {
+      const next = procedures.filter((p) => p.id !== deleteTarget.id)
+      setProcedures(next)
+      persistRecords({ procedures: next })
+      toast({ title: "Procedimento removido" })
+    } else {
+      const next = payments.filter((p) => p.id !== deleteTarget.id)
+      setPayments(next)
+      persistRecords({ payments: next })
+      toast({ title: "Pagamento removido" })
+    }
+    setDeleteTarget(null)
   }
 
   // ── Anamnese ───────────────────────────────────────────────────────────────
@@ -345,8 +363,8 @@ export default function PatientDetailPage() {
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="bg-gray-50 border-b border-gray-100">
-                              {["Procedimento", "Profissional", "Data", "Valor", "Status"].map((h) => (
-                                <th key={h} className={`py-3 px-5 text-[11px] font-bold text-gray-400 uppercase tracking-wide ${h === "Valor" ? "text-right" : "text-left"}`}>{h}</th>
+                              {["Procedimento", "Profissional", "Data", "Valor", "Status", ""].map((h, i) => (
+                                <th key={i} className={`py-3 px-5 text-[11px] font-bold text-gray-400 uppercase tracking-wide ${h === "Valor" ? "text-right" : "text-left"}`}>{h}</th>
                               ))}
                             </tr>
                           </thead>
@@ -361,6 +379,15 @@ export default function PatientDetailPage() {
                                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${PROCEDURE_STATUS_STYLES[proc.status]}`}>
                                     {PROCEDURE_STATUS_LABELS[proc.status]}
                                   </span>
+                                </td>
+                                <td className="px-5 py-3.5 text-right">
+                                  <button
+                                    onClick={() => setDeleteTarget({ type: "procedure", id: proc.id, label: proc.name })}
+                                    className="text-gray-400 hover:text-red-600 transition-colors"
+                                    title="Excluir procedimento"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
                                 </td>
                               </tr>
                             ))}
@@ -401,8 +428,8 @@ export default function PatientDetailPage() {
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="bg-gray-50 border-b border-gray-100">
-                              {["Data", "Descrição", "Forma", "Valor", "Status"].map((h) => (
-                                <th key={h} className={`py-3 px-5 text-[11px] font-bold text-gray-400 uppercase tracking-wide ${h === "Valor" ? "text-right" : "text-left"}`}>{h}</th>
+                              {["Data", "Descrição", "Forma", "Valor", "Status", ""].map((h, i) => (
+                                <th key={i} className={`py-3 px-5 text-[11px] font-bold text-gray-400 uppercase tracking-wide ${h === "Valor" ? "text-right" : "text-left"}`}>{h}</th>
                               ))}
                             </tr>
                           </thead>
@@ -418,6 +445,15 @@ export default function PatientDetailPage() {
                                     {pay.status === "paid" ? "Pago" : "Pendente"}
                                   </span>
                                 </td>
+                                <td className="px-5 py-3.5 text-right">
+                                  <button
+                                    onClick={() => setDeleteTarget({ type: "payment", id: pay.id, label: pay.desc })}
+                                    className="text-gray-400 hover:text-red-600 transition-colors"
+                                    title="Excluir pagamento"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
@@ -425,7 +461,7 @@ export default function PatientDetailPage() {
                             <tr className="border-t-2 border-gray-200 bg-gray-50">
                               <td colSpan={3} className="px-5 py-3 text-sm font-bold text-gray-600">Total</td>
                               <td className="px-5 py-3 text-right font-bold text-[#50348F]">{fmtBRL(payments.reduce((s, p) => s + p.value, 0))}</td>
-                              <td />
+                              <td colSpan={2} />
                             </tr>
                           </tfoot>
                         </table>
@@ -663,6 +699,27 @@ export default function PatientDetailPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>Cancelar</Button>
             <Button className="bg-[#50348F] hover:bg-[#50348F]/90 text-white" onClick={addPayment}>Registrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Confirmar Exclusão */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-red-600 flex items-center gap-2">
+              <Trash2 className="w-5 h-5" /> Confirmar exclusão
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600">
+            Deseja realmente excluir {deleteTarget?.type === "procedure" ? "o procedimento" : "o pagamento"}{" "}
+            <span className="font-semibold text-gray-800">{deleteTarget?.label}</span>? Esta ação não pode ser desfeita.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancelar</Button>
+            <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmDeletion}>
+              Excluir
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
