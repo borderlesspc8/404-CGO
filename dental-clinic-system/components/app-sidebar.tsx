@@ -32,14 +32,15 @@ export function AppSidebar({ isOpen = false, onClose = () => {} }: AppSidebarPro
       {/* Sidebar - empurra o conteúdo ao abrir */}
       <aside
         className={cn(
-          "fixed left-0 top-0 h-full bg-white shadow-xl z-40 transition-transform duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] w-52",
+          "fixed left-0 top-0 h-full shadow-xl z-40 transition-transform duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] w-52",
+          "bg-white dark:bg-[#1a1230]",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="bg-white px-4 py-4">
-            <h2 className="text-[#50348F] text-xl font-bold">Menu</h2>
+          <div className="px-4 py-4 bg-white dark:bg-[#1a1230]">
+            <h2 className="text-[#50348F] dark:text-purple-300 text-xl font-bold">Menu</h2>
           </div>
 
           {/* Navigation */}
@@ -48,7 +49,7 @@ export function AppSidebar({ isOpen = false, onClose = () => {} }: AppSidebarPro
               {menuItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href
-                
+
                 return (
                   <li key={item.href}>
                     <Link
@@ -57,8 +58,8 @@ export function AppSidebar({ isOpen = false, onClose = () => {} }: AppSidebarPro
                       className={cn(
                         "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
                         isActive
-                          ? "bg-[#50348F] text-white"
-                          : "text-[#50348F] hover:bg-[#50348F]/10"
+                          ? "bg-[#50348F] text-white dark:bg-purple-700 dark:text-white"
+                          : "text-[#50348F] dark:text-purple-300 hover:bg-[#50348F]/10 dark:hover:bg-purple-800/40"
                       )}
                     >
                       <Icon className="w-5 h-5" />
@@ -71,8 +72,8 @@ export function AppSidebar({ isOpen = false, onClose = () => {} }: AppSidebarPro
           </nav>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 px-6 py-4">
-            <p className="text-sm text-gray-500 text-center">
+          <div className="border-t border-gray-200 dark:border-purple-900 px-6 py-4">
+            <p className="text-sm text-gray-500 dark:text-purple-400 text-center">
               Sistema de Clínica Odontológica
             </p>
           </div>

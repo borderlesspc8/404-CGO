@@ -11,6 +11,8 @@ import { OrdersProvider } from "@/components/orders-context"
 import { ReviewsProvider } from "@/components/reviews-context"
 import { SidebarProvider } from "@/components/sidebar-context"
 import PWAInstaller from "@/components/pwa-installer"
+import { ThemeProvider } from "next-themes"
+import { Toaster } from "sonner"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -83,21 +85,24 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body className={`font-sans antialiased`}>
-        <PWAInstaller />
-        <AuthProvider>
-          <SidebarProvider>
-            <CartProvider>
-              <FavoritesProvider>
-                <OrdersProvider>
-                  <ReviewsProvider>{children}</ReviewsProvider>
-                </OrdersProvider>
-              </FavoritesProvider>
-            </CartProvider>
-          </SidebarProvider>
-        </AuthProvider>
-        <Analytics />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <PWAInstaller />
+          <AuthProvider>
+            <SidebarProvider>
+              <CartProvider>
+                <FavoritesProvider>
+                  <OrdersProvider>
+                    <ReviewsProvider>{children}</ReviewsProvider>
+                  </OrdersProvider>
+                </FavoritesProvider>
+              </CartProvider>
+            </SidebarProvider>
+          </AuthProvider>
+          <Toaster richColors position="top-right" />
+          <Analytics />
+        </ThemeProvider>
       </body>
     </html>
   )
