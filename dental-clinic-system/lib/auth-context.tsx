@@ -2,58 +2,128 @@
 
 import type React from "react"
 
-import { createContext, useContext, useState, useEffect } from "react"
-import { mockUsers, type User } from "./mock-data"
+import { createContext, useContext, useEffect, useState } from "react"
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  type User as FirebaseUser,
+} from "firebase/auth"
+import { doc, getDoc, setDoc } from "firebase/firestore"
+import { getDb, getFirebaseAuth } from "@/lib/firebase"
+import { mockUsers, type User, type UserRole } from "@/lib/mock-data"
 
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
-  logout: () => void
+  logout: () => Promise<void>
   isAuthenticated: boolean
   isLoading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+function roleFromEmail(email: string): UserRole {
+  return email.includes("admin") ? "admin" : "professional"
+}
+
+function profileFromFirebaseUser(firebaseUser: FirebaseUser): User {
+  const knownUser = mockUsers.find((item) => item.email === firebaseUser.email)
+  return {
+    id: knownUser?.id ?? firebaseUser.uid,
+    firebaseUid: firebaseUser.uid,
+    name: knownUser?.name ?? firebaseUser.displayName ?? firebaseUser.email ?? "Usuário",
+    email: firebaseUser.email ?? knownUser?.email ?? "",
+    role: knownUser?.role ?? roleFromEmail(firebaseUser.email ?? ""),
+    avatar: knownUser?.avatar ?? firebaseUser.photoURL ?? undefined,
+  }
+}
+
+async function loadUserProfile(firebaseUser: FirebaseUser): Promise<User> {
+  const fallbackProfile = profileFromFirebaseUser(firebaseUser)
+  const db = getDb()
+
+  if (!db) return fallbackProfile
+
+  const ref = doc(db, "users", firebaseUser.uid)
+  const snap = await getDoc(ref)
+
+  if (!snap.exists()) {
+    await setDoc(
+      ref,
+      {
+        id: fallbackProfile.id,
+        firebaseUid: firebaseUser.uid,
+        name: fallbackProfile.name,
+        email: fallbackProfile.email,
+        role: fallbackProfile.role,
+        avatar: fallbackProfile.avatar ?? null,
+      },
+      { merge: true },
+    )
+    return fallbackProfile
+  }
+
+  const data = snap.data() as Partial<User>
+  return {
+    id: data.id ?? fallbackProfile.id,
+    firebaseUid: firebaseUser.uid,
+    name: data.name ?? fallbackProfile.name,
+    email: data.email ?? fallbackProfile.email,
+    role: data.role ?? fallbackProfile.role,
+    avatar: data.avatar ?? fallbackProfile.avatar,
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Restaura sessão do localStorage (evita logout em reload/hot reload)
-    const storedUser = localStorage.getItem("dental-user")
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch {
-        localStorage.removeItem("dental-user")
-      }
+    localStorage.removeItem("dental-user")
+
+    const auth = getFirebaseAuth()
+    if (!auth) {
+      setUser(null)
+      setIsLoading(false)
+      return
     }
-    setIsLoading(false)
+
+    return onAuthStateChanged(auth, async (firebaseUser) => {
+      try {
+        setIsLoading(true)
+        if (!firebaseUser) {
+          setUser(null)
+          return
+        }
+        setUser(await loadUserProfile(firebaseUser))
+      } finally {
+        setIsLoading(false)
+      }
+    })
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    const auth = getFirebaseAuth()
+    if (!auth) return false
 
-    const foundUser = mockUsers.find((u) => u.email === email && u.password === password)
-
-    if (foundUser) {
-      const userWithoutPassword = { ...foundUser, password: "" }
-      setUser(userWithoutPassword)
-      localStorage.setItem("dental-user", JSON.stringify(userWithoutPassword))
-      // Limpa a flag do vídeo para que seja exibido novamente neste login
+    try {
+      const credential = await signInWithEmailAndPassword(auth, email, password)
+      setUser(await loadUserProfile(credential.user))
       sessionStorage.removeItem("introVideoShown")
       return true
+    } catch {
+      return false
     }
-
-    return false
   }
 
-  const logout = () => {
+  const logout = async () => {
+    const auth = getFirebaseAuth()
+    if (auth) {
+      await signOut(auth)
+    }
     setUser(null)
     localStorage.removeItem("dental-user")
-    // Limpa a flag do vídeo para que seja exibido no próximo login
     sessionStorage.removeItem("introVideoShown")
   }
 

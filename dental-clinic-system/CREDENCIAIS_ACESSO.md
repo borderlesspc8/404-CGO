@@ -1,10 +1,17 @@
 # Credenciais de Acesso
 
-Usuários disponíveis para login no sistema.
+Usuários disponíveis para login no sistema via Firebase Auth.
 
-| Usuário | Email | Senha | Perfil |
-|---------|-------|-------|--------|
-| Administrador Borderless | admin@borderless.local | Admin@123 | Admin |
-| Alaor Pasian Júnior | alaor@borderless.local | Prof@123 | Profissional |
-| Rafael Correia | admin@laperle.com | admin123 | Admin |
-| Alaor Pasian Júnior | alaor@laperle.com | prof123 | Profissional |
+| Usuário | Email | Perfil |
+|---------|-------|--------|
+| Administrador Borderless | admin@borderless.local | Admin |
+| Alaor Pasian Júnior | alaor@borderless.local | Profissional |
+
+As senhas não ficam mais versionadas no código. Configure-as em `.env.local`:
+
+```env
+FIREBASE_SEED_ADMIN_PASSWORD=
+FIREBASE_SEED_PROFESSIONAL_PASSWORD=
+```
+
+Depois execute `npm run seed:users` para criar ou atualizar os usuários no Firebase Auth.

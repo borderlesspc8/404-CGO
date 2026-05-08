@@ -1,16 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Script para enviar os 2 usuários mocados para o Firebase
- * - Firebase Auth: cria conta com email/senha
- * - Firestore: armazena perfil (id, name, role, avatar)
- *
- * Pré-requisito: Baixe a chave de conta de serviço no Firebase Console:
- *   Projeto > Configurações > Contas de serviço > Gerar nova chave privada
- *   Salve como: firebase-service-account.json (na raiz do projeto ou em ./scripts/)
+ * Cria usuários iniciais no Firebase Auth e salva perfis em Firestore.
  *
  * Configure no .env.local:
  *   FIREBASE_SERVICE_ACCOUNT_PATH=./firebase-service-account.json
+ *   FIREBASE_SEED_ADMIN_EMAIL=admin@borderless.local
+ *   FIREBASE_SEED_ADMIN_PASSWORD=<senha forte>
+ *   FIREBASE_SEED_PROFESSIONAL_EMAIL=alaor@borderless.local
+ *   FIREBASE_SEED_PROFESSIONAL_PASSWORD=<senha forte>
  *
  * Execute: npm run seed:users
  */
@@ -19,7 +17,6 @@ const admin = require("firebase-admin")
 const path = require("path")
 const fs = require("fs")
 
-// Carrega .env.local se existir
 const envPath = path.join(__dirname, "..", ".env.local")
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, "utf8")
@@ -33,24 +30,53 @@ if (fs.existsSync(envPath)) {
   })
 }
 
+function requiredEnv(key) {
+  const value = process.env[key]
+  if (!value) {
+    console.error(`Variável obrigatória ausente: ${key}`)
+    process.exit(1)
+  }
+  return value
+}
+
 const USERS = [
   {
-    id: "1",
-    name: "Rafael Correia",
-    email: "admin@laperle.com",
-    password: "admin123",
+    id: "admin-borderless",
+    name: "Administrador Borderless",
+    email: requiredEnv("FIREBASE_SEED_ADMIN_EMAIL"),
+    password: requiredEnv("FIREBASE_SEED_ADMIN_PASSWORD"),
     role: "admin",
     avatar: "/admin-user-interface.png",
   },
   {
-    id: "2",
+    id: "prof-alaor-borderless",
     name: "Alaor Pasian Júnior",
-    email: "alaor@laperle.com",
-    password: "prof123",
+    email: requiredEnv("FIREBASE_SEED_PROFESSIONAL_EMAIL"),
+    password: requiredEnv("FIREBASE_SEED_PROFESSIONAL_PASSWORD"),
     role: "professional",
     avatar: "/dentist-visit.png",
   },
 ]
+
+async function upsertAuthUser(auth, user) {
+  try {
+    const existing = await auth.getUserByEmail(user.email)
+    await auth.updateUser(existing.uid, {
+      displayName: user.name,
+      password: user.password,
+      disabled: false,
+    })
+    return existing.uid
+  } catch {
+    const created = await auth.createUser({
+      email: user.email,
+      password: user.password,
+      displayName: user.name,
+      disabled: false,
+    })
+    return created.uid
+  }
+}
 
 async function main() {
   const serviceAccountPath =
@@ -63,17 +89,7 @@ async function main() {
     : path.resolve(__dirname, "..", serviceAccountPath)
 
   if (!fs.existsSync(resolvedPath)) {
-    console.error(`
-❌ Arquivo de conta de serviço não encontrado: ${resolvedPath}
-
-Para obter a chave:
-1. Acesse https://console.firebase.google.com
-2. Selecione o projeto cgo-f1669
-3. Configurações (engrenagem) > Contas de serviço
-4. Clique em "Gerar nova chave privada"
-5. Salve o JSON como firebase-service-account.json na raiz do projeto
-6. Ou defina FIREBASE_SERVICE_ACCOUNT_PATH no .env.local
-`)
+    console.error(`Conta de serviço não encontrada: ${resolvedPath}`)
     process.exit(1)
   }
 
@@ -86,48 +102,30 @@ Para obter a chave:
   const auth = admin.auth()
   const db = admin.firestore()
 
-  console.log("🔥 Enviando usuários para o Firebase...\n")
+  console.log("Enviando usuários para Firebase Auth e Firestore...\n")
 
   for (const user of USERS) {
-    try {
-      let firebaseUid = null
-
-      // Verifica se usuário já existe no Auth
-      try {
-        const existing = await auth.getUserByEmail(user.email)
-        firebaseUid = existing.uid
-        console.log(`  ✓ ${user.email} já existe no Auth (${firebaseUid})`)
-      } catch {
-        // Cria usuário no Firebase Auth
-        const created = await auth.createUser({
-          email: user.email,
-          password: user.password,
-          displayName: user.name,
-        })
-        firebaseUid = created.uid
-        console.log(`  ✓ ${user.email} criado no Auth (${firebaseUid})`)
-      }
-
-      // Salva perfil no Firestore (collection: users)
-      const userProfile = {
+    const firebaseUid = await upsertAuthUser(auth, user)
+    await db.collection("users").doc(firebaseUid).set(
+      {
         id: user.id,
         firebaseUid,
         name: user.name,
         email: user.email,
         role: user.role,
-        avatar: user.avatar || null,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      }
+        avatar: user.avatar,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    )
 
-      await db.collection("users").doc(firebaseUid).set(userProfile, { merge: true })
-      console.log(`  ✓ Perfil salvo no Firestore (users/${firebaseUid})\n`)
-    } catch (err) {
-      console.error(`  ✗ Erro em ${user.email}:`, err.message)
-      process.exit(1)
-    }
+    console.log(`✓ ${user.email} (${user.role}) -> users/${firebaseUid}`)
   }
 
-  console.log("✅ Concluído! 2 usuários enviados para o Firebase.")
+  console.log("\nConcluído.")
 }
 
-main()
+main().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})

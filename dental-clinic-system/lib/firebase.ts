@@ -1,8 +1,8 @@
-import { initializeApp, getApps, type FirebaseApp } from "firebase/app"
-import { getAnalytics, type Analytics, isSupported } from "firebase/analytics"
+import { getApps, initializeApp, type FirebaseApp } from "firebase/app"
+import { getAnalytics, isSupported, type Analytics } from "firebase/analytics"
+import { getAuth, type Auth } from "firebase/auth"
 import { getFirestore, type Firestore } from "firebase/firestore"
 
-// Configuração do Firebase (variáveis em .env.local)
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -13,35 +13,48 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 }
 
-// Inicializa o Firebase (evita múltiplas inicializações)
-const app: FirebaseApp =
-  getApps().length === 0 ? initializeApp(firebaseConfig) : (getApps()[0] as FirebaseApp)
+export const isFirebaseConfigured = (): boolean =>
+  Boolean(
+    firebaseConfig.apiKey &&
+      firebaseConfig.authDomain &&
+      firebaseConfig.projectId &&
+      firebaseConfig.appId,
+  )
 
-// Analytics só funciona no browser (Next.js SSR)
+export const getFirebaseApp = (): FirebaseApp | null => {
+  if (!isFirebaseConfigured()) return null
+  return getApps().length === 0 ? initializeApp(firebaseConfig) : (getApps()[0] as FirebaseApp)
+}
+
 let analytics: Analytics | null = null
+let db: Firestore | null = null
+let auth: Auth | null = null
 
 export const getFirebaseAnalytics = async (): Promise<Analytics | null> => {
   if (typeof window === "undefined") return null
   if (analytics) return analytics
+  const app = getFirebaseApp()
+  if (!app) return null
   const supported = await isSupported()
-  if (supported) {
-    analytics = getAnalytics(app)
-    return analytics
-  }
-  return null
+  if (!supported) return null
+  analytics = getAnalytics(app)
+  return analytics
 }
 
-let db: Firestore | null = null
-
-/** Retorna null quando Firebase não está configurado (sem .env.local), ativando o fallback localStorage. */
 export const getDb = (): Firestore | null => {
   if (typeof window === "undefined") return null
-  if (!firebaseConfig.projectId) return null
+  const app = getFirebaseApp()
+  if (!app) return null
   if (!db) db = getFirestore(app)
   return db
 }
 
-export const isFirebaseConfigured = (): boolean => !!firebaseConfig.projectId
+export const getFirebaseAuth = (): Auth | null => {
+  if (typeof window === "undefined") return null
+  const app = getFirebaseApp()
+  if (!app) return null
+  if (!auth) auth = getAuth(app)
+  return auth
+}
 
-export { app }
-export default app
+export default getFirebaseApp

@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { isFirebaseConfigured } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -54,7 +55,11 @@ export default function LoginPage() {
       if (success) {
         router.push("/dashboard")
       } else {
-        setError("Usuário ou senha inválidos")
+        setError(
+          isFirebaseConfigured()
+            ? "Usuário ou senha inválidos"
+            : "Firebase Auth não configurado. Preencha as variáveis NEXT_PUBLIC_FIREBASE_*.",
+        )
       }
     } catch (err) {
       setError("Erro ao fazer login. Tente novamente.")

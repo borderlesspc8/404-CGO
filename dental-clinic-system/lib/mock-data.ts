@@ -6,9 +6,9 @@ export interface User {
   id: string
   name: string
   email: string
-  password: string
   role: UserRole
   avatar?: string
+  firebaseUid?: string
 }
 
 export interface Specialty {
@@ -81,7 +81,6 @@ export const mockUsers: User[] = [
     id: "admin-borderless",
     name: "Administrador Borderless",
     email: "admin@borderless.local",
-    password: "Admin@123",
     role: "admin",
     avatar: "/admin-user-interface.png",
   },
@@ -89,7 +88,6 @@ export const mockUsers: User[] = [
     id: "prof-alaor-borderless",
     name: "Alaor Pasian Júnior",
     email: "alaor@borderless.local",
-    password: "Prof@123",
     role: "professional",
     avatar: "/dentist-visit.png",
   },
@@ -97,7 +95,6 @@ export const mockUsers: User[] = [
     id: "1",
     name: "Rafael Correia",
     email: "admin@laperle.com",
-    password: "admin123",
     role: "admin",
     avatar: "/admin-user-interface.png",
   },
@@ -105,7 +102,6 @@ export const mockUsers: User[] = [
     id: "2",
     name: "Alaor Pasian Júnior",
     email: "alaor@laperle.com",
-    password: "prof123",
     role: "professional",
     avatar: "/dentist-visit.png",
   },
