@@ -105,7 +105,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     const auth = getFirebaseAuth()
-    if (!auth) return false
+
+    // Fallback para modo demo quando Firebase não está configurado
+    if (!auth) {
+      const found = mockUsers.find((u) => u.email === email)
+      if (found && password === "demo123") {
+        setUser(found)
+        sessionStorage.removeItem("introVideoShown")
+        return true
+      }
+      return false
+    }
 
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password)

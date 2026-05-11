@@ -90,6 +90,7 @@ const initialTransactions = [
 ]
 
 const FINANCEIRO_KEY = "cgo.financeiro"
+const SALDO_ABERTURA_KEY = "cgo.financeiro.saldoAbertura"
 
 function loadTransactions() {
   if (typeof window === "undefined") return initialTransactions
@@ -103,24 +104,45 @@ function loadTransactions() {
   }
 }
 
+function loadSaldoAbertura(): number {
+  if (typeof window === "undefined") return 5000
+  try {
+    const raw = window.localStorage.getItem(SALDO_ABERTURA_KEY)
+    if (!raw) return 5000
+    const parsed = parseFloat(raw)
+    return isNaN(parsed) ? 5000 : parsed
+  } catch {
+    return 5000
+  }
+}
+
 export default function FinanceiroPage() {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [transactions, setTransactions] = useState(initialTransactions)
+  const [showReceitaDialog, setShowReceitaDialog] = useState(false)
+  const [showDespesaDialog, setShowDespesaDialog] = useState(false)
+  const [saldoAbertura, setSaldoAbertura] = useState(5000)
 
   useEffect(() => {
     setTransactions(loadTransactions())
   }, [])
 
   useEffect(() => {
-    if (typeof window !== "undefined" && transactions !== initialTransactions) {
+    if (typeof window !== "undefined") {
       window.localStorage.setItem(FINANCEIRO_KEY, JSON.stringify(transactions))
     }
   }, [transactions])
-  const [showReceitaDialog, setShowReceitaDialog] = useState(false)
-  const [showDespesaDialog, setShowDespesaDialog] = useState(false)
-  const [saldoAbertura, setSaldoAbertura] = useState(5000)
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SALDO_ABERTURA_KEY, String(saldoAbertura))
+    }
+  }, [saldoAbertura])
+  useEffect(() => {
+    setSaldoAbertura(loadSaldoAbertura())
+  }, [])
 
   const todayKey = new Date().toISOString().split("T")[0]
   const todayTransactions = transactions.filter((t) => t.date === todayKey)

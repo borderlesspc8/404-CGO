@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { MessageCircle, Eye, EyeOff, CheckCircle } from "lucide-react"
+import { MessageCircle, Eye, EyeOff, CheckCircle, FlaskConical } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -58,7 +58,7 @@ export default function LoginPage() {
         setError(
           isFirebaseConfigured()
             ? "Usuário ou senha inválidos"
-            : "Firebase Auth não configurado. Preencha as variáveis NEXT_PUBLIC_FIREBASE_*.",
+            : "E-mail ou senha inválidos. Use as credenciais do Modo Demo.",
         )
       }
     } catch (err) {
@@ -72,7 +72,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col">
       {/* Header - cores originais */}
       <header className="bg-[#5b4b8a] py-8 px-6 text-center">
-        <h1 className="text-[#c9b888] text-4xl font-bold tracking-wider">PROPAGANDA</h1>
+        <h1 className="text-[#c9b888] text-4xl font-bold tracking-wider">Oris</h1>
       </header>
 
       {/* Main content */}
@@ -86,6 +86,19 @@ export default function LoginPage() {
 
           {/* Right side - Login form */}
           <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
+            {!isFirebaseConfigured() && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
+                <div className="flex items-center gap-2 text-amber-700 font-semibold text-sm">
+                  <FlaskConical className="w-4 h-4" />
+                  Modo Demo
+                </div>
+                <div className="text-xs text-amber-600 space-y-1">
+                  <p><strong>Admin:</strong> admin@borderless.local</p>
+                  <p><strong>Profissional:</strong> alaor@borderless.local</p>
+                  <p><strong>Senha:</strong> demo123</p>
+                </div>
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-[#5b4b8a] font-semibold">

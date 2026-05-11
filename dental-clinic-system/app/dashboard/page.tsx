@@ -151,7 +151,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <ModuleCard
                 title="CRM"
-                description="Controle de Campanhas, Funil de Leads, Agendamemntos, Desmarque, opção de relatório e outros"
+                description="Controle de Campanhas, Funil de Leads, Agendamentos, Desmarque, opção de relatório e outros"
                 href="/crm"
                 color="#50348F"
               />
