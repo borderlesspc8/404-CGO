@@ -11,7 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { TrendingUp, DollarSign, Target, CheckCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { TrendingUp, DollarSign, Target, CheckCircle, FileDown, Loader2 } from "lucide-react"
 import {
   ReportsFilter,
   FilterState,
@@ -20,6 +21,7 @@ import { SalesOpportunity } from "@/components/reports-table"
 import { ReportCharts } from "@/components/report-charts"
 import { SalesAnalytics } from "@/components/sales-analytics"
 import { toast } from "@/components/ui/use-toast"
+import { gerarRelatorioPDF } from "@/lib/relatorios-pdf"
 
 // Mock data com oportunidades de venda
 const mockOpportunities: SalesOpportunity[] = [
@@ -184,6 +186,7 @@ export default function RelatoriosPage() {
   const [editingOpportunity, setEditingOpportunity] = useState<SalesOpportunity | null>(null)
   const [newOpportunityOpen, setNewOpportunityOpen] = useState(false)
   const [viewMode, setViewMode] = useState<"table" | "kanban">("table")
+  const [exportingPDF, setExportingPDF] = useState(false)
   const [formData, setFormData] = useState({
     patient: "",
     email: "",
@@ -331,6 +334,25 @@ export default function RelatoriosPage() {
 
   if (isLoading || !user) return null
 
+  function handleExportPDF() {
+    if (filteredData.length === 0) {
+      toast({ title: "Nenhum dado para exportar", description: "Ajuste os filtros e tente novamente." })
+      return
+    }
+    setExportingPDF(true)
+    // Defer para o React renderizar o estado de loading antes de travar a thread
+    setTimeout(() => {
+      try {
+        gerarRelatorioPDF(filteredData)
+        toast({ title: "PDF gerado!", description: "O download foi iniciado automaticamente." })
+      } catch {
+        toast({ title: "Erro ao gerar PDF", description: "Tente novamente.", variant: "destructive" })
+      } finally {
+        setExportingPDF(false)
+      }
+    }, 50)
+  }
+
   // Cálculos para o resumo
   const totalValue = filteredData.reduce((sum, item) => sum + item.value, 0)
   const totalPotential = filteredData.reduce(
@@ -350,6 +372,16 @@ export default function RelatoriosPage() {
         {/* Título da página */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Relatórios de Oportunidades</h1>
+          <Button
+            onClick={handleExportPDF}
+            disabled={exportingPDF}
+            className="bg-[#50348F] hover:bg-[#5D40A2] text-white flex items-center gap-2"
+          >
+            {exportingPDF
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Gerando PDF...</>
+              : <><FileDown className="w-4 h-4" /> Exportar PDF</>
+            }
+          </Button>
         </div>
 
         {/* Cards de resumo */}

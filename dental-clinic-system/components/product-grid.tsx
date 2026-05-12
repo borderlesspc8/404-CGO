@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,23 +11,27 @@ import { useFavorites } from "@/components/favorites-context"
 import { useReviews } from "@/components/reviews-context"
 import { Product, ecommerceProducts, propagandaProductMap } from "@/lib/ecommerce-data"
 import { ShoppingCart, Heart, Minus, Plus, Star } from "lucide-react"
+import { toast } from "sonner"
 
 interface ProductGridProps {
   products?: Product[]
   recommended?: boolean
   serviceType?: string
+  initialSearch?: string
 }
 
 export function ProductGrid({
   products = ecommerceProducts,
   recommended = false,
   serviceType,
+  initialSearch = "",
 }: ProductGridProps) {
+  const router = useRouter()
   const { addItem } = useShoppingCart()
   const { isFavorite, addFavorite, removeFavorite } = useFavorites()
   const { getAverageRating, getTotalReviews } = useReviews()
   const [quantities, setQuantities] = useState<Record<string, number>>({})
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState(initialSearch)
   const [filterCategory, setFilterCategory] = useState("")
 
   // Filtrar produtos recomendados se necessário
@@ -49,6 +54,12 @@ export function ProductGrid({
     const quantity = quantities[product.id] || 1
     addItem(product, quantity)
     setQuantities({ ...quantities, [product.id]: 1 })
+    toast.success(`${product.name} adicionado ao carrinho`, {
+      action: {
+        label: "Ver Carrinho",
+        onClick: () => router.push("/carrinho"),
+      },
+    })
   }
 
   const formatCurrency = (value: number) => {

@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RecommendationEngine } from "@/components/recommendation-engine";
-import { AlertTriangle, CheckCircle, Lightbulb, Mail, Share2, ShoppingCart } from "lucide-react";
+import { AlertTriangle, CheckCircle, Lightbulb, Mail, Share2, ShoppingCart, ExternalLink } from "lucide-react";
+import { ecommerceProducts } from "@/lib/ecommerce-data";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -70,7 +71,7 @@ export default function PropagandasPage() {
 			phone: "5511999999999",
 			serviceType: "Implante",
 			currentOffer: "Desconto especial em implante!",
-			missingItems: ["Parafuso", "Capa provisória"],
+			missingItems: ["Implante Dentário Titânio 4.1mm", "Cimento Resinoso Dual"],
 			recommendation: "Recomendamos agendar o procedimento assim que possível.",
 			estimatedValue: 2500,
 			priority: "alta",
@@ -159,9 +160,31 @@ export default function PropagandasPage() {
 						<div>
 							<p className="text-xs font-semibold text-muted-foreground mb-2">MATERIAIS FALTANDO:</p>
 							<div className="flex flex-wrap gap-2">
-								{ad.missingItems.map((item, idx) => (
-									<Badge key={idx} variant="destructive" className="text-xs">{item}</Badge>
-								))}
+								{ad.missingItems.map((item, idx) => {
+									const product = ecommerceProducts.find(
+										(p) => p.name.toLowerCase() === item.toLowerCase()
+									)
+									return product ? (
+										<a
+											key={idx}
+											href={`/ecommerce?search=${encodeURIComponent(item)}`}
+											className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-300 hover:bg-red-200 transition-colors"
+											title={`Ver no ecommerce — estoque: ${product.stock}`}
+										>
+											{item}
+											<ExternalLink className="w-3 h-3" />
+										</a>
+									) : (
+										<span
+											key={idx}
+											className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-300"
+											title="Produto não encontrado no catálogo"
+										>
+											{item}
+											<AlertTriangle className="w-3 h-3" />
+										</span>
+									)
+								})}
 							</div>
 						</div>
 					)}
@@ -208,7 +231,18 @@ export default function PropagandasPage() {
 								{feedback && <div className="mt-2 text-sm text-center">{feedback}</div>}
 							</DialogContent>
 						</Dialog>
-						<Button size="sm" variant="outline" className="flex-1 gap-2" title="Ir para ecommerce" onClick={() => window.location.href = "/ecommerce"}>
+						<Button
+							size="sm"
+							variant="outline"
+							className="flex-1 gap-2"
+							title="Ir para ecommerce"
+							onClick={() => {
+								const query = ad.missingItems.length > 0
+									? `/ecommerce?search=${encodeURIComponent(ad.missingItems[0])}`
+									: "/ecommerce"
+								window.location.href = query
+							}}
+						>
 							<ShoppingCart className="h-4 w-4" />Comprar
 						</Button>
 						<Button size="sm" variant="outline" className="flex-1 gap-2" title="Compartilhar oferta" onClick={() => handleShare(ad)}>

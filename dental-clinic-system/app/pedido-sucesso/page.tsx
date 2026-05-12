@@ -9,7 +9,8 @@ import { MainFooter } from "@/components/main-footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { CheckCircle, Download, Home, Package } from "lucide-react"
+import { CheckCircle, Download, Home, Loader2, Package } from "lucide-react"
+import { gerarNotaFiscalPDF } from "@/lib/nota-fiscal-pdf"
 
 function PedidoSucessoContent() {
   const router = useRouter()
@@ -20,6 +21,16 @@ function PedidoSucessoContent() {
 
   const orderId = searchParams?.get("orderId")
   const order = orderId ? getOrderById(orderId) : null
+  const [downloadingPDF, setDownloadingPDF] = useState(false)
+
+  const handleDownloadNota = () => {
+    if (!order) return
+    setDownloadingPDF(true)
+    setTimeout(() => {
+      gerarNotaFiscalPDF(order, user?.name || "Cliente")
+      setDownloadingPDF(false)
+    }, 50)
+  }
 
   useEffect(() => {
     setMounted(true)
@@ -218,11 +229,17 @@ function PedidoSucessoContent() {
 
               {/* Nota Fiscal */}
               <Button
-                variant="ghost"
-                className="w-full gap-2 text-green-600 hover:text-green-700"
+                variant="outline"
+                className="w-full gap-2 border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+                onClick={handleDownloadNota}
+                disabled={downloadingPDF}
               >
-                <Download className="h-4 w-4" />
-                Baixar Nota Fiscal
+                {downloadingPDF ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                {downloadingPDF ? "Gerando PDF..." : "Baixar Nota Fiscal"}
               </Button>
             </div>
           ) : (

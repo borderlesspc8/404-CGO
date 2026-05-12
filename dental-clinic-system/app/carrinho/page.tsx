@@ -455,7 +455,6 @@ export default function CarrinhoPage() {
                     <Button
                       className="w-full bg-green-600 hover:bg-green-700"
                       onClick={handleCheckout}
-                      disabled={!address.street || !address.city || !address.state}
                     >
                       Finalizar Compra
                     </Button>

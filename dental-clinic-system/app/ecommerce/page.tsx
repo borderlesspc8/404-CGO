@@ -1,7 +1,7 @@
  "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { MainHeader } from "@/components/main-header"
 import { MainFooter } from "@/components/main-footer"
@@ -16,7 +16,9 @@ import { ShoppingCart, TrendingUp, Heart, TrendingDown } from "lucide-react"
 
 export default function EcommercePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, isLoading } = useAuth()
+  const initialSearch = searchParams.get("search") ?? ""
   const { getItemCount } = useShoppingCart()
   const { getFavoriteCount, getDiscountNotifications } = useFavorites()
   const [itemCount, setItemCount] = useState(0)
@@ -129,7 +131,7 @@ export default function EcommercePage() {
         </div>
 
         {/* Grade de Produtos */}
-        <ProductGrid />
+        <ProductGrid initialSearch={initialSearch} />
       </main>
 
       <MainFooter />

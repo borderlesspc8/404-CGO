@@ -45,33 +45,42 @@ async function loadUserProfile(firebaseUser: FirebaseUser): Promise<User> {
 
   if (!db) return fallbackProfile
 
-  const ref = doc(db, "users", firebaseUser.uid)
-  const snap = await getDoc(ref)
+  try {
+    const ref = doc(db, "users", firebaseUser.uid)
+    const snap = await getDoc(ref)
 
-  if (!snap.exists()) {
-    await setDoc(
-      ref,
-      {
-        id: fallbackProfile.id,
-        firebaseUid: firebaseUser.uid,
-        name: fallbackProfile.name,
-        email: fallbackProfile.email,
-        role: fallbackProfile.role,
-        avatar: fallbackProfile.avatar ?? null,
-      },
-      { merge: true },
-    )
+    if (!snap.exists()) {
+      try {
+        await setDoc(
+          ref,
+          {
+            id: fallbackProfile.id,
+            firebaseUid: firebaseUser.uid,
+            name: fallbackProfile.name,
+            email: fallbackProfile.email,
+            role: fallbackProfile.role,
+            avatar: fallbackProfile.avatar ?? null,
+          },
+          { merge: true },
+        )
+      } catch {
+        // Firestore write failed (regras ou banco não criado) — usa perfil local
+      }
+      return fallbackProfile
+    }
+
+    const data = snap.data() as Partial<User>
+    return {
+      id: data.id ?? fallbackProfile.id,
+      firebaseUid: firebaseUser.uid,
+      name: data.name ?? fallbackProfile.name,
+      email: data.email ?? fallbackProfile.email,
+      role: data.role ?? fallbackProfile.role,
+      avatar: data.avatar ?? fallbackProfile.avatar,
+    }
+  } catch {
+    // Firestore inacessível — usa perfil derivado do Firebase Auth
     return fallbackProfile
-  }
-
-  const data = snap.data() as Partial<User>
-  return {
-    id: data.id ?? fallbackProfile.id,
-    firebaseUid: firebaseUser.uid,
-    name: data.name ?? fallbackProfile.name,
-    email: data.email ?? fallbackProfile.email,
-    role: data.role ?? fallbackProfile.role,
-    avatar: data.avatar ?? fallbackProfile.avatar,
   }
 }
 

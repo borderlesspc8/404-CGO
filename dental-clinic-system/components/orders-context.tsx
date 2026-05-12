@@ -17,8 +17,11 @@ export interface Order {
   tax: number
   shipping: number
   total: number
-  status: "completed" | "processing" | "shipped" | "delivered"
+  status: "processing" | "shipped" | "delivered"
   paymentMethod: string
+  trackingCode?: string
+  shippedAt?: string
+  deliveredAt?: string
   address: {
     street: string
     number: string
@@ -35,6 +38,7 @@ interface OrdersContextType {
   addOrder: (order: Omit<Order, "id" | "date">) => string
   getOrderById: (id: string) => Order | undefined
   getOrdersByStatus: (status: Order["status"]) => Order[]
+  updateOrderStatus: (id: string, status: Order["status"]) => void
   getTotalSpent: () => number
   getOrderCount: () => number
 }
@@ -77,6 +81,23 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
     return orders.filter((o) => o.status === status)
   }
 
+  const updateOrderStatus = (id: string, status: Order["status"]) => {
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (o.id !== id) return o
+        const updates: Partial<Order> = { status }
+        if (status === "shipped" && !o.trackingCode) {
+          updates.trackingCode = `BR${Math.random().toString(36).slice(2, 10).toUpperCase()}BR`
+          updates.shippedAt = new Date().toISOString()
+        }
+        if (status === "delivered") {
+          updates.deliveredAt = new Date().toISOString()
+        }
+        return { ...o, ...updates }
+      })
+    )
+  }
+
   const getTotalSpent = (): number => {
     return orders.reduce((sum, order) => sum + order.total, 0)
   }
@@ -92,6 +113,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
         addOrder,
         getOrderById,
         getOrdersByStatus,
+        updateOrderStatus,
         getTotalSpent,
         getOrderCount,
       }}

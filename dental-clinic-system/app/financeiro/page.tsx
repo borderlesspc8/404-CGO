@@ -10,17 +10,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { 
-  DollarSign, 
-  TrendingUp, 
-  TrendingDown, 
-  CreditCard, 
+import {
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+  CreditCard,
   Wallet,
   Calendar,
   Plus,
   Search,
-  Filter
+  Filter,
+  FileDown,
+  Loader2,
 } from "lucide-react"
+import { gerarFinanceiroPDF } from "@/lib/financeiro-pdf"
 import {
   Table,
   TableBody,
@@ -124,6 +127,7 @@ export default function FinanceiroPage() {
   const [showReceitaDialog, setShowReceitaDialog] = useState(false)
   const [showDespesaDialog, setShowDespesaDialog] = useState(false)
   const [saldoAbertura, setSaldoAbertura] = useState(5000)
+  const [exportingPDF, setExportingPDF] = useState(false)
 
   useEffect(() => {
     setTransactions(loadTransactions())
@@ -258,14 +262,30 @@ export default function FinanceiroPage() {
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold text-[#50348F]">Financeiro</h1>
             <div className="flex gap-3">
-              <Button 
+              <Button
+                variant="outline"
+                disabled={exportingPDF}
+                onClick={() => {
+                  setExportingPDF(true)
+                  setTimeout(() => {
+                    try { gerarFinanceiroPDF(transactions, saldoAbertura) }
+                    finally { setExportingPDF(false) }
+                  }, 50)
+                }}
+              >
+                {exportingPDF
+                  ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Gerando...</>
+                  : <><FileDown className="w-4 h-4 mr-2" /> Exportar PDF</>
+                }
+              </Button>
+              <Button
                 className="bg-red-500 hover:bg-red-600 text-white"
                 onClick={() => setShowDespesaDialog(true)}
               >
                 <TrendingDown className="w-4 h-4 mr-2" />
                 Nova Despesa
               </Button>
-              <Button 
+              <Button
                 className="bg-green-600 hover:bg-green-700 text-white"
                 onClick={() => setShowReceitaDialog(true)}
               >
