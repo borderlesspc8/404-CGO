@@ -4,12 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import "@/styles/print.css"
-import { AuthProvider } from "@/lib/auth-context"
-import { CartProvider } from "@/components/shopping-cart-context"
-import { FavoritesProvider } from "@/components/favorites-context"
-import { OrdersProvider } from "@/components/orders-context"
-import { ReviewsProvider } from "@/components/reviews-context"
-import { SidebarProvider } from "@/components/sidebar-context"
+import { AppProviders } from "@/components/app-providers"
 import PWAInstaller from "@/components/pwa-installer"
 import { ThemeProvider } from "next-themes"
 import { Toaster } from "sonner"
@@ -89,17 +84,7 @@ export default function RootLayout({
       <body className={`font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <PWAInstaller />
-          <AuthProvider>
-            <SidebarProvider>
-              <CartProvider>
-                <FavoritesProvider>
-                  <OrdersProvider>
-                    <ReviewsProvider>{children}</ReviewsProvider>
-                  </OrdersProvider>
-                </FavoritesProvider>
-              </CartProvider>
-            </SidebarProvider>
-          </AuthProvider>
+          <AppProviders>{children}</AppProviders>
           <Toaster richColors position="top-right" />
           <Analytics />
         </ThemeProvider>

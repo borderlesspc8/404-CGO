@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from "react"
+import { loadFromStorage } from "@/lib/utils"
 
 export interface OrderItem {
   productId: string
@@ -51,10 +52,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true)
-    const stored = localStorage.getItem("dental-orders")
-    if (stored) {
-      setOrders(JSON.parse(stored))
-    }
+    setOrders(loadFromStorage<Order[]>("dental-orders", []))
   }, [])
 
   useEffect(() => {

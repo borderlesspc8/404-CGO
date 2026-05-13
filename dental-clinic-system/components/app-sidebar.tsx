@@ -1,8 +1,9 @@
 "use client"
 
-import { Home, Calendar, Users, DollarSign, BarChart3, MessageSquare, Package, FlaskConical, Settings, ShoppingCart, Heart } from "lucide-react"
+import { Home, Calendar, Users, DollarSign, BarChart3, MessageSquare, Package, FlaskConical, Settings, ShoppingCart, UserCog } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 
 interface AppSidebarProps {
@@ -21,11 +22,14 @@ const menuItems = [
   { icon: ShoppingCart, label: "E-commerce", href: "/ecommerce" },
   { icon: Package, label: "Meus Pedidos", href: "/pedidos" },
   { icon: FlaskConical, label: "Laboratório", href: "/laboratorio" },
+  { icon: UserCog, label: "Funcionários", href: "/funcionarios", adminOnly: true },
   { icon: Settings, label: "Configurações", href: "/configuracoes" },
 ]
 
 export function AppSidebar({ isOpen = false, onClose = () => {} }: AppSidebarProps) {
   const pathname = usePathname()
+  const { user } = useAuth()
+  const visibleItems = menuItems.filter((item) => !item.adminOnly || user?.role === "admin")
 
   return (
     <>
@@ -46,7 +50,7 @@ export function AppSidebar({ isOpen = false, onClose = () => {} }: AppSidebarPro
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto py-4">
             <ul className="space-y-1 px-3">
-              {menuItems.map((item) => {
+              {visibleItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href
 

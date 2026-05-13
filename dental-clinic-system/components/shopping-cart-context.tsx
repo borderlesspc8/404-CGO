@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useState, useCallback, useEffect, createContext, useContext } from "react"
 import { Badge } from "@/components/ui/badge"
-import { ShoppingCart, Search, Filter } from "lucide-react"
 import { Product, CartItem } from "@/lib/ecommerce-data"
+import { loadFromStorage } from "@/lib/utils"
+
+const CART_STORAGE_KEY = "cgo.cart"
 
 interface ShoppingCartContextType {
   items: CartItem[]
@@ -18,12 +17,22 @@ interface ShoppingCartContextType {
   getItemCount: () => number
 }
 
-import { createContext, useContext } from "react"
-
 const ShoppingCartContext = createContext<ShoppingCartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    setItems(loadFromStorage<CartItem[]>(CART_STORAGE_KEY, []))
+  }, [])
+
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
+    }
+  }, [items, mounted])
 
   const addItem = useCallback((product: Product, quantity: number) => {
     setItems((prev) => {
@@ -84,7 +93,6 @@ export function useShoppingCart() {
   return context
 }
 
-// Componente do carrinho
 export function CartBadge() {
   const { getItemCount } = useShoppingCart()
   const count = getItemCount()

@@ -11,6 +11,7 @@ import {
 } from "firebase/auth"
 import { doc, getDoc, setDoc } from "firebase/firestore"
 import { getDb, getFirebaseAuth } from "@/lib/firebase"
+import { findStoredEmployeeByEmail } from "@/lib/employees-storage"
 import { mockUsers, type User, type UserRole } from "@/lib/mock-data"
 
 interface AuthContextType {
@@ -22,6 +23,17 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+const AUTH_COOKIE = "auth-token"
+const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
+
+function setAuthCookie() {
+  document.cookie = `${AUTH_COOKIE}=1; path=/; max-age=${AUTH_COOKIE_MAX_AGE}; SameSite=Lax`
+}
+
+function clearAuthCookie() {
+  document.cookie = `${AUTH_COOKIE}=; path=/; max-age=0; SameSite=Lax`
+}
 
 function roleFromEmail(email: string): UserRole {
   return email.includes("admin") ? "admin" : "professional"
@@ -103,8 +115,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(true)
         if (!firebaseUser) {
           setUser(null)
+          clearAuthCookie()
           return
         }
+        setAuthCookie()
         setUser(await loadUserProfile(firebaseUser))
       } finally {
         setIsLoading(false)
@@ -117,9 +131,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Fallback para modo demo quando Firebase não está configurado
     if (!auth) {
+      const employee = findStoredEmployeeByEmail(email)
+      if (employee && employee.password === password) {
+        setUser({
+          id: employee.id,
+          name: employee.name,
+          email: employee.email,
+          role: employee.role,
+        })
+        setAuthCookie()
+        sessionStorage.removeItem("introVideoShown")
+        return true
+      }
+
       const found = mockUsers.find((u) => u.email === email)
       if (found && password === "demo123") {
         setUser(found)
+        setAuthCookie()
         sessionStorage.removeItem("introVideoShown")
         return true
       }
@@ -128,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password)
+      setAuthCookie()
       setUser(await loadUserProfile(credential.user))
       sessionStorage.removeItem("introVideoShown")
       return true
@@ -142,6 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await signOut(auth)
     }
     setUser(null)
+    clearAuthCookie()
     localStorage.removeItem("dental-user")
     sessionStorage.removeItem("introVideoShown")
   }

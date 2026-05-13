@@ -43,8 +43,18 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
+type Transaction = {
+  id: string
+  date: string
+  description: string
+  type: "receita" | "despesa"
+  value: number
+  status: string
+  category: string
+}
+
 // Mock data para demonstração
-const initialTransactions = [
+const initialTransactions: Transaction[] = [
   {
     id: "1",
     date: "2026-01-13",
@@ -95,7 +105,7 @@ const initialTransactions = [
 const FINANCEIRO_KEY = "cgo.financeiro"
 const SALDO_ABERTURA_KEY = "cgo.financeiro.saldoAbertura"
 
-function loadTransactions() {
+function loadTransactions(): Transaction[] {
   if (typeof window === "undefined") return initialTransactions
   try {
     const raw = window.localStorage.getItem(FINANCEIRO_KEY)

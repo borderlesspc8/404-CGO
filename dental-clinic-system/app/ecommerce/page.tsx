@@ -1,6 +1,6 @@
- "use client"
+"use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { MainHeader } from "@/components/main-header"
@@ -14,11 +14,11 @@ import { useShoppingCart } from "@/components/shopping-cart-context"
 import { useFavorites } from "@/components/favorites-context"
 import { ShoppingCart, TrendingUp, Heart, TrendingDown } from "lucide-react"
 
-export default function EcommercePage() {
+function EcommercePageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, isLoading } = useAuth()
-  const initialSearch = searchParams.get("search") ?? ""
+  const initialSearch = searchParams?.get("search") ?? ""
   const { getItemCount } = useShoppingCart()
   const { getFavoriteCount, getDiscountNotifications } = useFavorites()
   const [itemCount, setItemCount] = useState(0)
@@ -136,5 +136,13 @@ export default function EcommercePage() {
 
       <MainFooter />
     </div>
+  )
+}
+
+export default function EcommercePage() {
+  return (
+    <Suspense fallback={null}>
+      <EcommercePageContent />
+    </Suspense>
   )
 }

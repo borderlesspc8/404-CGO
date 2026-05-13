@@ -1,6 +1,8 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect } from "react"
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
+import { ecommerceProducts } from "@/lib/ecommerce-data"
+import { loadFromStorage } from "@/lib/utils"
 
 interface FavoriteProduct {
   productId: string
@@ -33,10 +35,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true)
-    const stored = localStorage.getItem("dental-favorites")
-    if (stored) {
-      setFavorites(JSON.parse(stored))
-    }
+    setFavorites(loadFromStorage<FavoriteProduct[]>("dental-favorites", []))
   }, [])
 
   useEffect(() => {
@@ -68,14 +67,11 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     return favorites.length
   }
 
-  const getDiscountNotifications = (): DiscountNotification[] => {
-    // Importar aqui dentro da função para evitar problemas de SSR
-    const { ecommerceProducts } = require("@/lib/ecommerce-data")
-    
+  const getDiscountNotifications = useCallback((): DiscountNotification[] => {
     const notifications: DiscountNotification[] = []
-    
+
     favorites.forEach((fav) => {
-      const product = ecommerceProducts.find((p: any) => p.id === fav.productId)
+      const product = ecommerceProducts.find((p) => p.id === fav.productId)
       if (product && product.price < fav.originalPrice) {
         const discountPercent = Math.round(
           ((fav.originalPrice - product.price) / fav.originalPrice) * 100
@@ -89,9 +85,9 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         })
       }
     })
-    
+
     return notifications
-  }
+  }, [favorites])
 
   return (
     <FavoritesContext.Provider

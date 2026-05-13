@@ -1,6 +1,7 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { loadFromStorage } from "@/lib/utils"
 
 export interface Review {
   id: string
@@ -25,7 +26,6 @@ interface ReviewsContextType {
 
 const ReviewsContext = createContext<ReviewsContextType | undefined>(undefined)
 
-// Dados iniciais de exemplo
 const INITIAL_REVIEWS: Review[] = [
   {
     id: "REV-001",
@@ -73,20 +73,20 @@ const INITIAL_REVIEWS: Review[] = [
   },
 ]
 
-export function ReviewsProvider({ children }: { children: React.ReactNode }) {
+export function ReviewsProvider({ children }: { children: ReactNode }) {
   const [reviews, setReviews] = useState<Review[]>([])
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    const stored = localStorage.getItem("dental-reviews")
-    if (stored) {
-      setReviews(JSON.parse(stored))
-    } else {
-      // Carrega reviews iniciais
-      setReviews(INITIAL_REVIEWS)
-      localStorage.setItem("dental-reviews", JSON.stringify(INITIAL_REVIEWS))
+    const stored = loadFromStorage<Review[] | null>("dental-reviews", null)
+    if (stored && stored.length > 0) {
+      setReviews(stored)
+      return
     }
+
+    setReviews(INITIAL_REVIEWS)
+    localStorage.setItem("dental-reviews", JSON.stringify(INITIAL_REVIEWS))
   }, [])
 
   useEffect(() => {
@@ -105,13 +105,13 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
   }
 
   const getReviewsByProduct = (productId: string): Review[] => {
-    return reviews.filter((r) => r.productId === productId)
+    return reviews.filter((review) => review.productId === productId)
   }
 
   const getAverageRating = (productId: string): number => {
     const productReviews = getReviewsByProduct(productId)
     if (productReviews.length === 0) return 0
-    const sum = productReviews.reduce((acc, r) => acc + r.rating, 0)
+    const sum = productReviews.reduce((acc, review) => acc + review.rating, 0)
     return Math.round((sum / productReviews.length) * 10) / 10
   }
 
@@ -122,8 +122,8 @@ export function ReviewsProvider({ children }: { children: React.ReactNode }) {
   const getRatingDistribution = (productId: string): Record<number, number> => {
     const productReviews = getReviewsByProduct(productId)
     const distribution: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
-    productReviews.forEach((r) => {
-      distribution[r.rating]++
+    productReviews.forEach((review) => {
+      distribution[review.rating]++
     })
     return distribution
   }
