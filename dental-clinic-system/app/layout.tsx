@@ -11,8 +11,10 @@ import { Toaster } from "sonner"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
 export const metadata: Metadata = {
+  metadataBase: new URL(appUrl),
   title: "Oris - Gestão odontológica inteligente",
   description: "Sistema completo de gestão para clínicas odontológicas",
   generator: "v0.app",

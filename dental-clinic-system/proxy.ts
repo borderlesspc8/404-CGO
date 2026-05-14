@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 const PUBLIC_PATHS = ["/"]
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const token = req.cookies.get("auth-token")?.value
   const { pathname } = req.nextUrl
   const isPublic = PUBLIC_PATHS.includes(pathname)
